@@ -2,6 +2,8 @@
 
 Leitfaden für Pitch, Demo (~2–5 Min.) und Q&A. Live-Demo: [contentpilot-is89.onrender.com](https://contentpilot-is89.onrender.com)
 
+**Pitch Deck (10 Slides, Gamma):** [`docs/pitchdeck.md`](pitchdeck.md) — inkl. Zuordnung zu [`mockups/`](../mockups/) und [Claude-Artifact](https://claude.ai/code/artifact/d294f9a7-abf0-43ae-a6d3-5c976ca51c6b).
+
 ---
 
 ## Elevator Pitch (30 Sekunden)

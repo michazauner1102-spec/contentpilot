@@ -75,7 +75,7 @@ flowchart LR
 5. **Dashboard** — KPIs, einklappbare Plattformen, Report pro Kanal  
 6. **Loop** — Learnings je Bereich, **Monats-Feedback-Dokument** (Markdown), Plan v2 im Kalender  
 
-**Pitch & Demo-Script:** [`docs/plattform-erklaeren.md`](docs/plattform-erklaeren.md)
+**Pitch & Demo-Script:** [`docs/plattform-erklaeren.md`](docs/plattform-erklaeren.md) · **Pitch Deck (10 Slides):** [`docs/pitchdeck.md`](docs/pitchdeck.md)
 
 ### Import aus Buffer / Hootsuite
 
