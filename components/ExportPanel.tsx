@@ -80,7 +80,7 @@ export function ExportPanel({
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          className="rounded-lg border px-3 py-2 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-900"
+          className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium hover:bg-[var(--surface-elevated)]"
           onClick={() => {
             downloadTextFile(
               buildExportMarkdown(b),
@@ -94,7 +94,7 @@ export function ExportPanel({
         </button>
         <button
           type="button"
-          className="rounded-lg border px-3 py-2 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-900"
+          className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium hover:bg-[var(--surface-elevated)]"
           onClick={() => {
             downloadTextFile(
               buildExportPlainText(b),
@@ -107,7 +107,7 @@ export function ExportPanel({
         </button>
         <button
           type="button"
-          className="rounded-lg border px-3 py-2 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-900"
+          className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium hover:bg-[var(--surface-elevated)]"
           onClick={() => {
             downloadTextFile(
               buildExportJson(b),

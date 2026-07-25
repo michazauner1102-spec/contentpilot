@@ -247,7 +247,7 @@ export function DayDetailDrawer({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex justify-end bg-black/40"
+      className="fixed inset-0 z-50 flex justify-end bg-[var(--overlay)]"
       role="dialog"
       aria-label={`Tag ${video.postingDay}: ${video.title}`}
       onClick={closeAll}

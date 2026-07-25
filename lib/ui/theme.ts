@@ -31,7 +31,7 @@ export const INPUT_FIELD =
   "w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-3 text-[var(--foreground)] placeholder:text-[var(--muted)] text-base sm:text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/35";
 
 export const BTN_PRIMARY =
-  "rounded-lg bg-[var(--foreground)] text-[var(--background)] px-4 py-2.5 text-sm font-semibold hover:opacity-90 disabled:opacity-45";
+  "rounded-lg bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] px-4 py-2.5 text-sm font-semibold hover:opacity-90 disabled:opacity-45";
 
 export const BTN_SECONDARY =
   "rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-2.5 text-sm font-medium text-[var(--foreground)] hover:border-[var(--accent)]/60";

@@ -1,6 +1,7 @@
 "use client";
 
 import type { AppMenuId } from "@/lib/ui/theme";
+import { ThemeToggle } from "@/components/shell/ThemeToggle";
 import { APP_MENU } from "@/lib/ui/theme";
 
 interface AppSidebarProps {
@@ -50,6 +51,7 @@ export function AppSidebar({
           Plan-Setup öffnen
         </button>
       )}
+      <ThemeToggle />
     </aside>
   );
 }
