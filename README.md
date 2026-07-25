@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/contentpilot-banner.svg" alt="ContentPilot — 30-Tage Content, Plan, Dreh, Loop" width="100%" />
+  <img src="docs/logo.png" alt="ContentPilot — 30-Tage Content, Plan, Dreh, Loop" width="640" />
 </p>
 
 <p align="center">
@@ -138,17 +138,38 @@ npm run dev
 
 ## Umgebungsvariablen
 
-Siehe [`.env.local.example`](.env.local.example):
+Siehe [`.env.local.example`](.env.local.example). **`.env.local` niemals committen.**
+
+### LLM (einer reicht — per `LLM_PROVIDER` wählen)
+
+| Provider | `LLM_PROVIDER` | API-Key |
+|----------|----------------|---------|
+| **Anthropic Claude** (Default) | `anthropic` | `ANTHROPIC_API_KEY` |
+| **Google Gemini** | `gemini` | `GOOGLE_GENERATIVE_AI_API_KEY` oder `GEMINI_API_KEY` |
+| **OpenAI** | `openai` | `OPENAI_API_KEY` |
+
+Optional: `LLM_MODEL` setzen (sonst sinnvoller Default pro Provider).
+
+### Referenz-Videos & Metriken (Plattformen)
+
+| Plattform | Referenzen | Metriken (Live-Vorbereitung) |
+|-----------|------------|------------------------------|
+| **YouTube** | `YOUTUBE_API_KEY` (Search) | `YOUTUBE_OAUTH_REFRESH_TOKEN` + `INSIGHTS_MODE=live` |
+| **Instagram / Meta** | `META_ACCESS_TOKEN` oder `INSTAGRAM_ACCESS_TOKEN` | `INSTAGRAM_BUSINESS_ACCOUNT_ID` |
+| **TikTok** | `TIKTOK_CLIENT_KEY` + `TIKTOK_CLIENT_SECRET` | `TIKTOK_ACCESS_TOKEN` |
+| **LinkedIn** | `LINKEDIN_ACCESS_TOKEN` | `LINKEDIN_ORGANIZATION_URN` |
+
+- `REFERENCE_PLATFORMS=youtube,instagram,tiktok,linkedin` — welche Quellen für Referenz-Recherche  
+- `INSIGHTS_MODE=mock` (Default) — plattformspezifische **Demo-Metriken** im Dashboard  
+- `INSIGHTS_MODE=live` — nutzt konfigurierte API-Keys, sonst Mock-Fallback  
+
+### Research & Export
 
 | Variable | Zweck |
 |----------|--------|
-| `ANTHROPIC_API_KEY` | LLM (Plan, Skript, Research, …) |
 | `TAVILY_API_KEY` / `PERPLEXITY_API_KEY` | Web-Research |
-| `YOUTUBE_API_KEY` | Referenzvideos (Fallback ohne Key) |
 | `FIRECRAWL_API_KEY` | Trend-Research im Wizard |
 | `NOTION_TOKEN` + `NOTION_DATABASE_ID` | Optional: Notion-Sync |
-
-**.env.local niemals committen.**
 
 ---
 

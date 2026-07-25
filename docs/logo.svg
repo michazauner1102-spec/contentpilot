@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="160" viewBox="0 0 640 160" role="img" aria-label="ContentPilot">
+  <rect width="640" height="160" rx="16" fill="#0c0c0d"/>
+  <circle cx="80" cy="80" r="44" fill="none" stroke="#2a2a30" stroke-width="2"/>
+  <path d="M80 36 A44 44 0 0 1 124 80" fill="none" stroke="#6d7f96" stroke-width="5" stroke-linecap="round"/>
+  <path d="M124 80 A44 44 0 0 1 80 124" fill="none" stroke="#6f8a7a" stroke-width="5" stroke-linecap="round"/>
+  <path d="M80 124 A44 44 0 0 1 36 80" fill="none" stroke="#9a8570" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="80" cy="80" r="6" fill="#8b9aab"/>
+  <text x="148" y="88" fill="#e8e8ea" font-family="system-ui,-apple-system,sans-serif" font-size="42" font-weight="600">ContentPilot</text>
+  <text x="150" y="118" fill="#9494a0" font-family="system-ui,-apple-system,sans-serif" font-size="16">30-Tage Content · Plan · Dreh · Loop</text>
+</svg>
