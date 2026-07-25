@@ -1,16 +1,16 @@
 /**
- * 2-Minuten-Demo-Video (Playwright Screen Recording).
- * Voraussetzung: npm run dev
- * Ausführen: PLAYWRIGHT_BROWSERS_PATH=0 npm run demo:video
+ * Plattform-Demo: Schritt-für-Schritt nach Nutzerintention, langsame Übergänge & Eingaben.
+ * Voraussetzung: npm run dev (127.0.0.1:3000)
+ * PLAYWRIGHT_BROWSERS_PATH=0 npm run demo:video
  */
 import { chromium } from "playwright";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { execSync } from "child_process";
 import {
   buildDemoPerformance,
   buildDemoZyklus,
-  DEMO_DIFF,
   DEMO_LEARNINGS,
   DEMO_NISCHE,
   DEMO_RESEARCH,
@@ -21,16 +21,53 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const videoDir = path.join(__dirname, "../demo/video");
 const baseUrl = "http://127.0.0.1:3000";
 const STORAGE_KEY = "contentpilot.flow.v1";
-const TARGET_SECONDS = 120;
+
+/** Max. Länge (Inhalt wird darauf getrimmt — kein langes Auffüllen). */
+const TARGET_SECONDS = Number(process.env.DEMO_VIDEO_MAX_SEC ?? "130");
+
+const VIEWPORT = { width: 1920, height: 1080 };
+const DEVICE_SCALE = Number(process.env.DEMO_VIDEO_SCALE ?? "2");
+
+/** Langsam, aber innerhalb ~2 Min Gesamtlauf. */
+const P = {
+  afterScene: 2600,
+  afterNav: 2400,
+  afterClick: 1400,
+  afterType: 1800,
+  readBlock: 3200,
+  scrollStep: 750,
+  typeDelayMs: 78,
+};
 
 const answers = {
   zielgruppeDetail:
-    "Selbstständige Handwerker in Stuttgart — 25–45, regional, wenig Zeit",
-  contentZiel30Tage: "30 Tage sichtbar werden, 5 qualifizierte Anfragen",
-  formatPraeferenz: "Talking Head + kurze Tutorials, max. 60 Sekunden",
-  noGos: "Kein Hard-Selling, keine Stock-Only-Videos",
-  zeitBudgetProWoche: "3–4 Stunden pro Woche",
+    "Selbstständige Handwerker in Stuttgart — regional, wenig Zeit für Content",
+  contentZiel30Tage: "30 Tage sichtbar werden und 5 qualifizierte Anfragen",
+  formatPraeferenz: "Talking Head und kurze Tutorials unter 60 Sekunden",
+  noGos: "Kein Hard-Selling, keine reinen Stock-Videos",
+  zeitBudgetProWoche: "3 bis 4 Stunden pro Woche",
 };
+
+const sampleBrainstorm = [
+  {
+    id: "demo-b1",
+    pillar: "attention" as const,
+    title: "3 Fehler bei Reels",
+    hook: "Stop — bevor du das nächste Reel drehst …",
+    superhook: "POV: Du postest und niemand reagiert",
+    format: "talking_head" as const,
+    status: "idea" as const,
+  },
+  {
+    id: "demo-b2",
+    pillar: "value" as const,
+    title: "Anfrage in 7 Tagen",
+    hook: "So bekommst du deine erste Anfrage …",
+    superhook: "Tutorial in unter 60 Sekunden",
+    format: "tutorial" as const,
+    status: "shortlist" as const,
+  },
+];
 
 function baseSnapshot(overrides: Record<string, unknown> = {}) {
   return {
@@ -59,13 +96,14 @@ function baseSnapshot(overrides: Record<string, unknown> = {}) {
     research: DEMO_RESEARCH,
     researchCycle: 1,
     researchThemen: [],
-    brainstormIdeas: [],
+    brainstormIdeas: sampleBrainstorm,
     productionGuide: null,
     progressLog: [],
     recordedIds: [],
     learnings: null,
     planDiff: null,
     planVersion: 1,
+    performance: [] as unknown[],
     ...overrides,
   };
 }
@@ -79,97 +117,156 @@ async function inject(
     { key: STORAGE_KEY, data: snapshot }
   );
   await page.reload({ waitUntil: "networkidle" });
-  await page.waitForTimeout(800);
+  await page.waitForTimeout(P.afterScene);
 }
 
-async function pause(page: import("playwright").Page, ms: number) {
+async function hold(page: import("playwright").Page, ms: number) {
   await page.waitForTimeout(ms);
 }
 
-async function clickNav(page: import("playwright").Page, label: RegExp) {
-  await page.getByRole("button", { name: label }).click();
-  await pause(page, 900);
+async function slowType(
+  page: import("playwright").Page,
+  locator: import("playwright").Locator,
+  text: string
+) {
+  await locator.click();
+  await hold(page, P.afterClick);
+  await locator.fill("");
+  await locator.pressSequentially(text, { delay: P.typeDelayMs });
+  await hold(page, P.afterType);
+}
+
+async function slowScroll(page: import("playwright").Page, deltaY: number) {
+  const steps = Math.max(3, Math.round(Math.abs(deltaY) / 120));
+  const step = deltaY / steps;
+  for (let i = 0; i < steps; i++) {
+    await page.mouse.wheel(0, step);
+    await hold(page, P.scrollStep);
+  }
+}
+
+async function navTo(page: import("playwright").Page, label: RegExp) {
+  await hold(page, P.afterClick);
+  await page.getByRole("button", { name: label }).first().click();
+  await hold(page, P.afterNav);
+}
+
+async function wizardNext(page: import("playwright").Page) {
+  await hold(page, P.readBlock);
+  const next = page.getByRole("button", { name: /Nächste Frage/i });
+  if (await next.isVisible()) {
+    await next.click();
+    await hold(page, P.afterScene);
+  }
 }
 
 async function main() {
   fs.mkdirSync(videoDir, { recursive: true });
 
-  const browser = await chromium.launch({
-    headless: true,
-  });
-
+  const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
-    viewport: { width: 1920, height: 1080 },
-    deviceScaleFactor: 1,
-    recordVideo: { dir: videoDir, size: { width: 1920, height: 1080 } },
+    viewport: VIEWPORT,
+    deviceScaleFactor: DEVICE_SCALE,
+    recordVideo: {
+      dir: videoDir,
+      size: { width: VIEWPORT.width, height: VIEWPORT.height },
+    },
   });
 
   const page = await context.newPage();
   const t0 = Date.now();
-
-  // —— 1. Einstieg: Plan-Setup (Planungsprozess) ——
-  await page.goto(baseUrl, { waitUntil: "networkidle" });
-  await pause(page, 2500);
-  await page.getByRole("button", { name: /Plan-Setup starten/i }).click();
-  await pause(page, 2000);
-  const nischeInput = page.locator('input[placeholder*="Handwerker"]');
-  await nischeInput.fill(DEMO_NISCHE);
-  await pause(page, 800);
-  await page
-    .locator('input[placeholder*="Creator"]')
-    .fill("Max Handwerk — Referenz-Creator");
-  await pause(page, 1200);
-  await page.getByRole("button", { name: /Weiter zu 5 Fragen/i }).click();
-  await pause(page, 1500);
-  const wizardSelect = page.locator("select").first();
-  if (await wizardSelect.isVisible()) {
-    await wizardSelect.selectOption({ label: "Lokale Selbstständige / KMU" });
-    await pause(page, 800);
-  }
-  await page.locator("textarea").first().fill(answers.zielgruppeDetail);
-  await pause(page, 1200);
-  await page.getByRole("button", { name: /Nächste Frage/i }).click();
-  await pause(page, 1500);
-
-  // —— 2. Human in the Loop (Research & Freigabe) ——
   const v1 = buildDemoZyklus(1);
+  const v2 = buildDemoZyklus(2);
+  const diff = computePlanDiff(v1.plan, v2.plan);
+  const perf = buildDemoPerformance(v1);
+
+  // ═══ Schritt 1: Einstieg & Plan-Setup (Nische) ═══
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  await hold(page, P.afterScene);
+  await page.getByRole("button", { name: /Plan-Setup starten/i }).click();
+  await hold(page, P.afterScene);
+  await slowType(page, page.locator("#setup-nische"), DEMO_NISCHE);
+  await slowType(
+    page,
+    page.locator("#setup-referent"),
+    "Max Handwerk — Referenz-Creator"
+  );
+  await hold(page, P.readBlock);
+  await page.getByRole("button", { name: /Weiter — 5 kurze Fragen/i }).click();
+  await hold(page, P.afterScene);
+
+  // ═══ Schritt 2: Fünf Fragen (Wizard) — sichtbar ausfüllen ═══
+  const select = page.locator("select").first();
+  if (await select.isVisible()) {
+    await select.selectOption({ label: "Lokale Selbstständige / KMU" });
+    await hold(page, P.afterType);
+  }
+  await slowType(page, page.locator("textarea").first(), answers.zielgruppeDetail);
+  await wizardNext(page);
+
+  if (await select.isVisible()) {
+    await select.selectOption({ label: "Anfragen & Leads" }).catch(() => {});
+    await hold(page, P.afterType);
+  }
+  await slowType(page, page.locator("textarea").first(), answers.contentZiel30Tage);
+  await hold(page, P.readBlock);
+
+  // Rest der Antworten im State — Fokus Video: Setup + 2 Fragen sichtbar, dann Research
   await inject(
     page,
     baseSnapshot({
       phase: "research",
       menu: "hitl",
       zyklus: null,
+      research: {
+        ...DEMO_RESEARCH,
+        researchNotizen:
+          "Pain Points und Hook-Muster für Handwerker — freigegeben für den Plan.",
+      },
     })
   );
-  await clickNav(page, /Human in the Loop/i);
-  await pause(page, 4000);
-  await page.mouse.wheel(0, 500);
-  await pause(page, 3500);
 
-  // —— 3. Kalender Monat 1 ——
+  // ═══ Schritt 3: Human in the Loop — Brainstorm & Research ═══
+  await navTo(page, /Human in the Loop/i);
+  await hold(page, P.readBlock);
+  await slowScroll(page, 320);
+  await hold(page, P.readBlock);
+  await slowScroll(page, 380);
+  await hold(page, P.readBlock);
+
+  // ═══ Schritt 4: 30-Tage-Kalender — Tag & Skript ═══
   await inject(
     page,
     baseSnapshot({
       zyklus: v1,
       menu: "calendar",
       planVersion: 1,
+      phase: "done",
     })
   );
-  await clickNav(page, /Kalender/i);
-  await pause(page, 2000);
-  await page.getByRole("button", { name: /Reichweite-Hook Tag 5/i }).click();
-  await pause(page, 4500);
+  await navTo(page, /Kalender/i);
+  await hold(page, P.readBlock);
+  await page.getByRole("button", { name: /Reichweite-Hook Tag 10/i }).click();
+  await hold(page, P.afterScene);
+  await hold(page, P.readBlock);
+  const scriptBtn = page.getByRole("button", {
+    name: /Jetzt Skript erstellen basierend auf Inhaltsvorschlag/i,
+  });
+  if (await scriptBtn.isVisible()) {
+    await scriptBtn.click();
+    await hold(page, P.afterScene * 2);
+  }
+  await hold(page, P.readBlock);
   await page.keyboard.press("Escape");
-  await pause(page, 1200);
+  await hold(page, P.afterNav);
 
-  // —— 4. Aufnahme-To-dos ——
-  await clickNav(page, /Aufnahme-To-dos/i);
-  await pause(page, 4000);
-  await page.mouse.wheel(0, 400);
-  await pause(page, 2500);
+  // ═══ Schritt 5: Aufnahme-To-dos (Produktion) ═══
+  await navTo(page, /Aufnahme-To-dos/i);
+  await hold(page, P.readBlock);
+  await slowScroll(page, 360);
+  await hold(page, P.readBlock);
 
-  // —— 5. Dashboard & Insights ——
-  const perf = buildDemoPerformance(v1);
+  // ═══ Schritt 6: Dashboard — Metriken & Plattformen ═══
   await inject(
     page,
     baseSnapshot({
@@ -179,23 +276,24 @@ async function main() {
       planVersion: 1,
     })
   );
-  await clickNav(page, /Dashboard/i);
-  await pause(page, 4000);
-  await page.mouse.wheel(0, 450);
-  await pause(page, 2500);
-  await page
-    .getByRole("button", { name: /Klicken für Großansicht/i })
-    .first()
-    .click();
-  await pause(page, 5000);
-  await page.keyboard.press("Escape");
-  await pause(page, 1200);
-  await page.mouse.wheel(0, 650);
-  await pause(page, 3500);
+  await navTo(page, /Dashboard/i);
+  await hold(page, P.readBlock);
+  await page.getByRole("button", { name: /^Plattformen/i }).click();
+  await hold(page, P.afterScene);
+  const instagramCard = page.getByRole("button", { name: /Instagram/i }).first();
+  if (await instagramCard.isVisible()) {
+    await instagramCard.click();
+    await hold(page, P.afterScene);
+    await hold(page, P.readBlock);
+    await page.keyboard.press("Escape");
+    await hold(page, P.afterNav);
+  }
+  await page.getByRole("button", { name: /^Plattformen/i }).click();
+  await hold(page, P.afterClick);
+  await slowScroll(page, 280);
+  await hold(page, P.readBlock);
 
-  // Learnings & Plan-v2-Vorschau (Diff)
-  const v2 = buildDemoZyklus(2);
-  const diff = computePlanDiff(v1.plan, v2.plan);
+  // ═══ Schritt 7: Loop — Learnings, Plan v2, Monats-Feedback ═══
   await inject(
     page,
     baseSnapshot({
@@ -208,11 +306,20 @@ async function main() {
       planVersion: 2,
     })
   );
-  await pause(page, 2500);
-  await page.mouse.wheel(0, 750);
-  await pause(page, 4000);
+  await hold(page, P.afterScene);
+  await page.getByText("Feedback & Loop").first().scrollIntoViewIfNeeded();
+  await hold(page, P.readBlock);
+  await slowScroll(page, 220);
+  await hold(page, P.readBlock);
+  const feedbackSelect = page.locator("select").last();
+  if (await feedbackSelect.isVisible()) {
+    await feedbackSelect.selectOption({ label: "Dokument erstellen" });
+    await hold(page, P.afterScene * 2);
+    await page.getByText("Vorschau einblenden").click().catch(() => {});
+    await hold(page, P.readBlock);
+  }
 
-  // —— 6. Kalender Monat 2 (Plan v2) ——
+  // ═══ Schritt 8: Kalender Plan v2 ═══
   await inject(
     page,
     baseSnapshot({
@@ -223,20 +330,21 @@ async function main() {
       planVersion: 2,
     })
   );
-  await clickNav(page, /Kalender/i);
-  await pause(page, 3500);
+  await navTo(page, /Kalender/i);
+  await hold(page, P.readBlock);
   await page.getByRole("button", { name: /Reichweite-Hook Tag 15/i }).click();
-  await pause(page, 4500);
+  await hold(page, P.afterScene);
+  await hold(page, P.readBlock);
   await page.keyboard.press("Escape");
-  await pause(page, 800);
-  await page.mouse.wheel(0, 550);
-  await pause(page, 3500);
+  await hold(page, P.afterNav);
 
-  // Auffüllen bis ~2 Minuten
+  // Haltephase bis Ziel-Länge (ruhiger Abschluss auf Dashboard)
   const elapsed = Date.now() - t0;
   const remaining = TARGET_SECONDS * 1000 - elapsed;
-  if (remaining > 0) {
-    await pause(page, remaining);
+  if (remaining > 2000) {
+    await navTo(page, /Dashboard/i);
+    await page.getByText("Feedback & Loop").first().scrollIntoViewIfNeeded();
+    await hold(page, Math.min(remaining, 6000));
   }
 
   await context.close();
@@ -252,12 +360,30 @@ async function main() {
     .sort((a, b) => b.m - a.m);
 
   const latest = webms[0]?.f;
-  if (latest) {
-    const dest = path.join(videoDir, "contentpilot-demo-2min.webm");
-    fs.renameSync(path.join(videoDir, latest), dest);
-    console.log("Video gespeichert:", dest);
-  } else {
-    console.warn("Keine WebM-Datei gefunden in", videoDir);
+  if (!latest) {
+    console.warn("Keine WebM-Datei in", videoDir);
+    return;
+  }
+
+  const destWebm = path.join(videoDir, "contentpilot-demo-2min.webm");
+  fs.renameSync(path.join(videoDir, latest), destWebm);
+  console.log("WebM:", destWebm, `(Scale ${DEVICE_SCALE}×, Ziel ${TARGET_SECONDS}s)`);
+
+  const destMp4 = path.join(videoDir, "contentpilot-demo-2min.mp4");
+  const ffmpegBin =
+    process.env.FFMPEG_PATH ??
+    ["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg", "ffmpeg"].find(
+      (p) => p === "ffmpeg" || fs.existsSync(p)
+    ) ??
+    "ffmpeg";
+  try {
+    execSync(
+      `"${ffmpegBin}" -y -i "${destWebm}" -t ${TARGET_SECONDS} -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -movflags +faststart "${destMp4}"`,
+      { stdio: "inherit" }
+    );
+    console.log("MP4:", destMp4);
+  } catch {
+    console.log("Hinweis: ffmpeg nicht gefunden — nur WebM erzeugt.");
   }
 }
 

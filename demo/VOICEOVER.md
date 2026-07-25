@@ -1,30 +1,31 @@
-# ContentPilot — 2-Minuten-Demo (Voiceover)
+# ContentPilot — Demo (Voiceover)
 
-Synchron zum automatischen Screen-Recording (`demo/video/contentpilot-demo-2min.webm`).
+Synchron zu `demo/video/contentpilot-demo-2min.webm` / `.mp4` — **Schritt für Schritt**, langsame Eingaben.
 
 | ca. | Szene | Text (Deutsch) |
 |-----|--------|----------------|
-| 0:00 | Start | **ContentPilot** — der KI-gestützte 30-Tage-Content-Loop für Creator und Teams. |
-| 0:05 | Plan-Setup | Wir starten mit **Plan-Setup**: Nische, Referenz-Creator und fünf präzisierende Fragen. |
-| 0:20 | Wizard | So entsteht ein Briefing, das zu deiner Zielgruppe passt — hier: Personal Branding für Handwerker. |
-| 0:30 | Human in the Loop | Unter **Human in the Loop** laufen Brainstorm, Research und Freigabe — du behältst die Kontrolle. |
-| 0:45 | Kalender v1 | **Monat 1:** Der Kalender verteilt 30 Tage auf Reichweite, Vertrauen und Conversion. Jeder Tag: Thema, Skript, Drehliste. |
-| 1:00 | To-dos | **Aufnahme-To-dos** bündeln Dreh-Wochen und Checklisten — direkt verknüpft mit dem Plan. |
-| 1:10 | Dashboard | Im **Dashboard** siehst du KPIs und Plattform-Metriken — Instagram, LinkedIn, YouTube, TikTok. |
-| 1:25 | Report | Der **Plattform-Report** fasst Views, Engagement und Demo-Insights zusammen. |
-| 1:35 | Loop | Aus den Daten werden **Learnings** — und ein **Plan v2** mit sichtbaren Anpassungen. |
-| 1:45 | Kalender v2 | **Monat 2:** Der aktualisierte Kalender setzt die Learnings um — mehr Tutorials, schärfere Hooks. |
-| 1:55 | Outro | **ContentPilot** schließt den Loop: Planen, Drehen, Messen, Verbessern. |
+| 0:00 | Start | **ContentPilot** — der 30-Tage-Content-Loop mit Human in the Loop. |
+| 0:08 | Plan-Setup | Nische und Referenz-Creator eingeben, dann **fünf Fragen**. |
+| 0:35 | Wizard | Zielgruppe, Ziel, Formate, No-Gos, Zeit — nacheinander. |
+| 0:55 | Human in the Loop | **Brainstorm** und **Research**. |
+| 1:15 | Kalender | Tag wählen, **Inhaltsvorschlag**, **Skript erstellen**. |
+| 1:35 | To-dos | **Aufnahme-To-dos**. |
+| 1:45 | Dashboard | **Metriken** und Plattform-Report. |
+| 2:05 | Loop | **Learnings**, **Plan v2**, **Monats-Feedback**. |
+| 2:20 | Kalender v2 | **Monat 2** im Kalender. |
+| 2:30 | Outro | Planen → Drehen → Messen → Verbessern. |
 
-## Video neu aufnehmen
+## Neu aufnehmen
 
 ```bash
 npm run dev
-npm run demo:video
+PLAYWRIGHT_BROWSERS_PATH=0 npm run demo:video
 ```
 
-Optional WebM → MP4 (ffmpeg):
+Länger / langsamer (Ziel ~180 s):
 
 ```bash
-ffmpeg -i demo/video/contentpilot-demo-2min.webm -c:v libx264 -crf 23 demo/video/contentpilot-demo-2min.mp4
+DEMO_VIDEO_MAX_SEC=180 PLAYWRIGHT_BROWSERS_PATH=0 npm run demo:video
 ```
+
+Ausgabe: `demo/video/contentpilot-demo-2min.webm` und `.mp4` (ffmpeg).

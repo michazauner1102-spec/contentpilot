@@ -31,7 +31,8 @@ ContentPilot ist ein **MVP für Creator und Marketing-Teams**, die Social-Video 
 | **Human in the Loop** | Brainstorm, Research und Freigabe — KI schlägt vor, **du entscheidest** |
 | **Ein Kalender, ein Truth** | Tag anklicken → Thema, Hook, Skript, Grafik, Referenz im Drawer |
 | **Produktion mitdenken** | Aufnahme-To-dos nach Dreh-Wochen, Checkliste, Fortschritt |
-| **Geschlossener Loop** | Dashboard → Mock-Metriken → Learnings → **Plan v2** im Kalender |
+| **Geschlossener Loop** | Dashboard → Metriken → Learnings → **Plan v2** + **Monats-Feedback** (Trends, Kommentare) |
+| **Skript aus Inhalt** | Pro Kalender-Tag: Inhaltsvorschlag → **Skript generieren** (Hook, Inhalt, CTA, Bildideen) |
 | **Export-ready** | Markdown, TXT, JSON, Notion (optional) |
 
 ---
@@ -55,17 +56,17 @@ flowchart LR
   B --> C[30-Tage-Kalender]
   C --> D[Aufnahme-To-dos]
   D --> E[Dashboard]
-  E --> F[Learnings]
+  E --> F[Learnings & Feedback]
   F --> G[Plan v2]
   G --> C
 ```
 
 1. **Plan-Setup** — Nische, 5 Fragen, Briefing, optional Trend-Research  
 2. **Human in the Loop** — Brainstorm-Board, Research, Plan freigeben  
-3. **Kalender** — 30 Tage mit Bereichs-Farben (Reichweite / Vertrauen / Conversion)  
+3. **Kalender** — 30 Tage; Tag-Detail mit Inhaltsvorschlag, Skript, Bildvorschläge, Drehliste  
 4. **Aufnahme-To-dos** — Wochen fürs Drehen, abhaken was fertig ist  
-5. **Dashboard** — KPIs, Plattform-Karussell, Report pro Plattform  
-6. **Loop** — Plan v2 aus Learnings, Diff sichtbar im UI  
+5. **Dashboard** — KPIs, einklappbare Plattformen, Report pro Kanal  
+6. **Loop** — Learnings je Bereich, **Monats-Feedback-Dokument** (Markdown), Plan v2 im Kalender  
 
 ---
 
@@ -133,6 +134,19 @@ npm run dev
 | `npm run build` | Production-Build |
 | `npm start` | Production (z. B. Render) |
 | `npm run screenshots` | README-Screenshots unter `docs/screenshots/` |
+| `npm run pitch-screenshots-hd` | HiDPI-Pitch-Mockups (2×) unter `mockups/` |
+| `npm run demo:video` | 2-Min-Plattform-Demo (Playwright, lokal `demo/video/`) |
+
+### Demo-Video (lokal)
+
+Nach `npm run dev` in einem zweiten Terminal:
+
+```bash
+PLAYWRIGHT_BROWSERS_PATH=0 npm run demo:video
+```
+
+Ausgabe: `demo/video/contentpilot-demo-2min.webm` und `.mp4` (mit ffmpeg). Voiceover-Vorlage: [`demo/VOICEOVER.md`](demo/VOICEOVER.md).  
+Optional: `DEMO_VIDEO_MAX_SEC=130` · `DEMO_VIDEO_SCALE=2` für Länge und Schärfe.
 
 ---
 
@@ -188,16 +202,20 @@ Optional: `LLM_MODEL` setzen (sonst sinnvoller Default pro Provider).
 ```
 app/                 API Routes & App Router
 components/          Kalender, Dashboard, HITL, Shell
-lib/                 Typen, Plan-Generator, Insights, Demo
+lib/                 Typen, Plan-Generator, Insights, Feedback, LLM, Demo
+mockups/             HiDPI-Pitch-Screenshots (Gamma)
+demo/                Voiceover-Skript für Demo-Video (Video-Dateien lokal, gitignored)
 insights-module/     Performance-Kern (→ lib/insights/)
 docs/                Banner, Screenshots für README
 ```
 
 ---
 
-## Insights & Export
+## Insights, Feedback & Export
 
 - Performance-Demo: `InsightsService` / Mock-Import über `/api/performance/import`  
+- **Monats-Feedback:** `POST /api/loop/feedback-document` — Trends, Gut/Schwach, Vorschläge, Kommentar-Analyse  
+- Loop-Learnings: `/api/loop/analyze` → Plan v2 über `/api/plan/generate`  
 - Export: Markdown, Notizen, JSON, Zwischenablage; optional Notion  
 
 ---
