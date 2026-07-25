@@ -1,3 +1,5 @@
+import { forceMockOnly } from "@/lib/demo/mockOnly";
+
 export interface FirecrawlSearchHit {
   title?: string;
   url?: string;
@@ -9,6 +11,9 @@ export async function firecrawlSearch(
   query: string,
   limit = 6
 ): Promise<{ hits: FirecrawlSearchHit[]; source: "firecrawl" | "fallback" }> {
+  if (forceMockOnly()) {
+    return { hits: [], source: "fallback" };
+  }
   const apiKey = process.env.FIRECRAWL_API_KEY;
   if (!apiKey) {
     return { hits: [], source: "fallback" };

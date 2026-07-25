@@ -1,3 +1,5 @@
+import { forceMockOnly } from "@/lib/demo/mockOnly";
+
 export interface WebResearchResult {
   snippets: string[];
   source: "tavily" | "perplexity" | "fallback";
@@ -68,6 +70,17 @@ export async function runWebResearch(nische: string): Promise<WebResearchResult>
     `${nische} größte Pain Points Probleme Zielgruppe`,
     `${nische} virale Hooks Video Formate Trends`,
   ];
+
+  if (forceMockOnly()) {
+    return {
+      source: "fallback",
+      snippets: [
+        `Nische: ${nische} — Demo-Modus (Mock), keine Web-APIs.`,
+        "Typische Zielgruppe: Einsteiger und Fortgeschrittene in der Nische.",
+        "Pain Points: Zeitmangel, Sichtbarkeit, fehlende Struktur beim Content.",
+      ],
+    };
+  }
 
   if (process.env.TAVILY_API_KEY) {
     try {

@@ -1,4 +1,5 @@
 import type { Platform } from "@/lib/types";
+import { forceMockOnly } from "@/lib/demo/mockOnly";
 
 export type ReferencePlatform = Platform;
 
@@ -22,6 +23,7 @@ export function parseReferencePlatforms(): ReferencePlatform[] {
 }
 
 export function platformHasReferenceApi(platform: ReferencePlatform): boolean {
+  if (forceMockOnly()) return false;
   switch (platform) {
     case "youtube":
       return Boolean(process.env.YOUTUBE_API_KEY?.trim());
@@ -43,6 +45,7 @@ export function platformHasReferenceApi(platform: ReferencePlatform): boolean {
 }
 
 export function platformHasInsightsApi(platform: ReferencePlatform): boolean {
+  if (forceMockOnly()) return false;
   switch (platform) {
     case "youtube":
       return Boolean(

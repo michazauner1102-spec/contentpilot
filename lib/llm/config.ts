@@ -1,5 +1,7 @@
 export type LlmProviderId = "anthropic" | "gemini" | "openai";
 
+import { forceMockOnly } from "@/lib/demo/mockOnly";
+
 export interface LlmConfig {
   provider: LlmProviderId;
   model: string;
@@ -30,6 +32,7 @@ export function getLlmConfig(): LlmConfig {
 }
 
 export function isLlmConfigured(): boolean {
+  if (forceMockOnly()) return false;
   const { provider } = getLlmConfig();
   switch (provider) {
     case "anthropic":

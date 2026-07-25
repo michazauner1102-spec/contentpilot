@@ -1,4 +1,5 @@
 import { callLLMJSON } from "@/lib/claude";
+import { forceMockOnly } from "@/lib/demo/mockOnly";
 import type { ReferenzVideo, ResearchResult, VideoFormat } from "@/lib/types";
 import { findReferenzVideosMultiPlatform } from "@/lib/references/multiPlatform";
 
@@ -11,7 +12,7 @@ async function fetchViewCounts(
   videoIds: string[]
 ): Promise<Record<string, number>> {
   const key = process.env.YOUTUBE_API_KEY;
-  if (!key || videoIds.length === 0) return {};
+  if (forceMockOnly() || !key || videoIds.length === 0) return {};
 
   const url = new URL("https://www.googleapis.com/youtube/v3/videos");
   url.searchParams.set("part", "statistics");

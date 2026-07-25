@@ -5,10 +5,14 @@ import type {
   ResearchResult,
   Zyklus,
 } from "@/lib/types";
+import { forceMockOnly } from "@/lib/demo/mockOnly";
 
 const NOTION_VERSION = "2022-06-28";
 
 function getConfig() {
+  if (forceMockOnly()) {
+    return { token: undefined, databaseId: undefined };
+  }
   const token = process.env.NOTION_TOKEN;
   const databaseId = process.env.NOTION_DATABASE_ID;
   return { token, databaseId };

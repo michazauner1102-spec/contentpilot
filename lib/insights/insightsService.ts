@@ -1,4 +1,5 @@
 import type { Bereich } from "@/lib/types";
+import { forceMockOnly } from "@/lib/demo/mockOnly";
 import { CompositeInsightsProvider } from "./compositeInsightsProvider";
 import { MockInsightsProvider } from "./mockInsightsProvider";
 import type {
@@ -18,7 +19,7 @@ export class InsightsService {
   /** mock (Default) oder live — plattformweise API-Keys aus .env */
   static fromEnv(): InsightsService {
     const mode = (process.env.INSIGHTS_MODE ?? "mock").toLowerCase();
-    if (mode === "mock") {
+    if (forceMockOnly() || mode === "mock") {
       return InsightsService.withMockData();
     }
     return new InsightsService(new CompositeInsightsProvider());

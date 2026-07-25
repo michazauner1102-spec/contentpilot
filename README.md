@@ -170,7 +170,9 @@ Optional: `DEMO_VIDEO_MAX_SEC=130` · `DEMO_VIDEO_SCALE=2` für Länge und Schä
 
 ## Umgebungsvariablen
 
-Siehe [`.env.local.example`](.env.local.example). **`.env.local` niemals committen.**
+Siehe [`.env.local.example`](.env.local.example) und [`docs/SECURITY.md`](docs/SECURITY.md). **Keine Secrets im Repository** — `.env.local` niemals committen.
+
+**Öffentliche Demo:** `FORCE_MOCK_ONLY=true` + `INSIGHTS_MODE=mock` (siehe [`render.yaml`](render.yaml)).
 
 ### LLM (einer reicht — per `LLM_PROVIDER` wählen)
 
