@@ -1,4 +1,4 @@
-import { callClaudeJSON } from "@/lib/claude";
+import { isLlmConfigured, callClaudeJSON } from "@/lib/llm";
 import type { ContentBriefing } from "@/lib/types";
 import type { BrainstormIdea, ContentPillar } from "./contentPillars";
 import { PILLAR_META } from "./contentPillars";
@@ -69,7 +69,7 @@ export async function generateBrainstormIdeas(
     ...meta,
   }));
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!isLlmConfigured()) {
     return mockBrainstormIdeas(nische);
   }
 

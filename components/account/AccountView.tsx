@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import type { ProductionGuide, VideoDetails } from "@/lib/types";
 import { BEREICH_LABELS } from "@/lib/types";
-import { bereichDotClass, bereichMutedClass } from "@/lib/ui/theme";
+import { BTN_PRIMARY, bereichDotClass, bereichMutedClass } from "@/lib/ui/theme";
 
 const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -191,8 +191,28 @@ export function RecordingTodoList({
 interface DayDetailDrawerProps {
   video: VideoDetails | null;
   onClose: () => void;
-  onLoadDetail?: (video: VideoDetails) => void;
+  onLoadDetail?: (
+    video: VideoDetails,
+    options?: { force?: boolean }
+  ) => void;
   loading?: boolean;
+}
+
+function ScriptBlock({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)]/40 px-3 py-2.5 space-y-1">
+      <p className="text-[10px] uppercase tracking-wider text-[var(--muted)]">
+        {label}
+      </p>
+      <p className="text-sm leading-relaxed whitespace-pre-wrap">{children}</p>
+    </div>
+  );
 }
 
 export function DayDetailDrawer({
@@ -203,7 +223,13 @@ export function DayDetailDrawer({
 }: DayDetailDrawerProps) {
   if (!video) return null;
 
-  const hasScript = Boolean(video.skript?.hook);
+  const hasScript = Boolean(video.skript?.hook?.trim());
+  const hasBilder = Boolean(video.grafikVorschlag?.trim());
+  const showGenerating = loading;
+
+  const requestScript = () => {
+    onLoadDetail?.(video, { force: true });
+  };
 
   return (
     <div
@@ -233,59 +259,77 @@ export function DayDetailDrawer({
           </button>
         </div>
 
-        <section className="space-y-2">
+        <section className="space-y-3">
           <h3 className="text-xs uppercase tracking-wider text-[var(--muted)]">
-            Thema
+            Inhaltsvorschlag
           </h3>
-          <p className="text-sm leading-relaxed">{video.hook}</p>
+          <p className="text-sm leading-relaxed text-[var(--foreground)]">
+            {video.hook}
+          </p>
           <p className="text-sm text-[var(--muted)]">{video.begruendung}</p>
-        </section>
-
-        <section className="space-y-2">
-          <h3 className="text-xs uppercase tracking-wider text-[var(--muted)]">
-            Skript
-          </h3>
-          {!hasScript && onLoadDetail && (
+          {onLoadDetail && (
             <button
               type="button"
               disabled={loading}
-              onClick={() => onLoadDetail(video)}
-              className="text-sm rounded-lg border border-[var(--border)] px-3 py-2 w-full"
+              onClick={() => requestScript()}
+              className={`${BTN_PRIMARY} w-full text-sm`}
             >
-              {loading ? "Generiere…" : "Skript & Vorschläge laden"}
+              {loading
+                ? "Skript wird erstellt…"
+                : "Jetzt Skript erstellen basierend auf Inhaltsvorschlag"}
             </button>
-          )}
-          {hasScript && (
-            <div className="space-y-3 text-sm leading-relaxed">
-              <p>
-                <span className="text-[var(--muted)]">Hook · </span>
-                {video.skript.hook}
-              </p>
-              <p>
-                <span className="text-[var(--muted)]">Body · </span>
-                {video.skript.body}
-              </p>
-              <p>
-                <span className="text-[var(--muted)]">CTA · </span>
-                {video.skript.cta}
-              </p>
-            </div>
           )}
         </section>
 
-        {(video.grafikVorschlag || video.referenzBegruendung) && (
+        <section className="space-y-3">
+          <h3 className="text-xs uppercase tracking-wider text-[var(--muted)]">
+            Skript
+          </h3>
+          {showGenerating && !hasScript && (
+            <p className="text-sm text-[var(--muted)] animate-pulse">
+              Hook, Inhalt, CTA und Bildvorschläge …
+            </p>
+          )}
+          {loading && hasScript && (
+            <p className="text-sm text-[var(--muted)] animate-pulse">
+              Skript wird aus dem Inhaltsvorschlag neu erstellt …
+            </p>
+          )}
+          {hasScript && !loading && (
+            <div className="space-y-2">
+              <ScriptBlock label="Hook">{video.skript.hook}</ScriptBlock>
+              <ScriptBlock label="Inhalt">{video.skript.body}</ScriptBlock>
+              <ScriptBlock label="CTA">{video.skript.cta}</ScriptBlock>
+            </div>
+          )}
+          {!hasScript && !loading && (
+            <p className="text-xs text-[var(--muted)]">
+              Noch kein Skript — oben aus dem Inhaltsvorschlag generieren.
+            </p>
+          )}
+        </section>
+
+        {(hasBilder || showGenerating) && (
           <section className="space-y-2">
             <h3 className="text-xs uppercase tracking-wider text-[var(--muted)]">
-              Vorschläge
+              Bildvorschläge
             </h3>
-            {video.grafikVorschlag && (
-              <p className="text-sm">{video.grafikVorschlag}</p>
+            {hasBilder ? (
+              <div className="rounded-lg border border-[var(--border)] px-3 py-2.5 text-sm leading-relaxed whitespace-pre-wrap">
+                {video.grafikVorschlag}
+              </div>
+            ) : (
+              <p className="text-sm text-[var(--muted)]">Wird mit dem Skript geladen …</p>
             )}
-            {video.referenzBegruendung && (
-              <p className="text-sm text-[var(--muted)]">
-                Referenz: {video.referenzBegruendung}
-              </p>
-            )}
+          </section>
+        )}
+
+        {video.referenzBegruendung?.trim() && (
+          <section className="space-y-2">
+            <h3 className="text-xs uppercase tracking-wider text-[var(--muted)]">
+              Referenz
+            </h3>
+            <p className="text-sm text-[var(--muted)]">{video.referenzBegruendung}</p>
           </section>
         )}
 

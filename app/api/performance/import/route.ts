@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     if (!body.videos?.length) {
       return NextResponse.json({ error: "videos fehlt" }, { status: 400 });
     }
-    const service = InsightsService.withMockData();
+    const service = InsightsService.fromEnv();
     const performance = await service.importPerformance(body.videos);
     const grouped = service.groupByBereich(performance);
     return NextResponse.json({ performance, grouped });

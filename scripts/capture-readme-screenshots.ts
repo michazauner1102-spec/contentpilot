@@ -9,7 +9,7 @@ import {
   buildDemoZyklus,
   DEMO_NISCHE,
   DEMO_RESEARCH,
-} from "../lib/demo/mockData.ts";
+} from "../lib/demo/mockData";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const outDir = path.join(__dirname, "../docs/screenshots");

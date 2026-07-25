@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { LoopAnalysisView } from "@/components/LoopAnalysisView";
-import { PlanDiffSummaryView } from "@/components/PlanDiffSummary";
+import { DashboardFeedbackSection } from "@/components/dashboard/DashboardFeedbackSection";
 import {
   assignCarouselPlatforms,
   buildDemoPerformance,
@@ -10,8 +9,7 @@ import {
 } from "@/lib/demo/mockData";
 import type { VideoWithInsights } from "@/lib/insights/types";
 import type { PlanDiffSummary } from "@/lib/planDiff";
-import type { Bereich, LoopAnalysisResult, Platform } from "@/lib/types";
-import { BTN_ACCENT } from "@/lib/ui/theme";
+import type { Bereich, LoopAnalysisResult, Platform, ResearchResult } from "@/lib/types";
 
 interface MetricsDashboardProps {
   performance: VideoWithInsights[];
@@ -23,6 +21,9 @@ interface MetricsDashboardProps {
   planVersion?: 1 | 2;
   onGeneratePlanV2?: () => void;
   planV2Loading?: boolean;
+  nische?: string;
+  monat?: string;
+  research?: ResearchResult | null;
 }
 
 const CAROUSEL_CHANNELS: {
@@ -96,10 +97,10 @@ function PlatformCarouselCard({
     <button
       type="button"
       onClick={onOpen}
-      className="snap-center shrink-0 w-[min(88vw,480px)] rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 space-y-5 min-h-[320px] flex flex-col text-left transition-colors hover:border-[var(--accent)] hover:bg-[var(--surface-elevated)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+      className="snap-center shrink-0 w-[min(82vw,400px)] rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 space-y-3 min-h-[240px] flex flex-col text-left transition-colors hover:border-[var(--accent)] hover:bg-[var(--surface-elevated)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
     >
       <header className="flex items-baseline justify-between gap-2 border-b border-[var(--border)] pb-3 w-full">
-        <h2 className="text-lg font-semibold">{label}</h2>
+        <h2 className="text-base font-semibold">{label}</h2>
         <span className="text-xs text-[var(--muted)]">
           {items.length} {items.length === 1 ? "Video" : "Videos"} · Report
         </span>
@@ -109,7 +110,7 @@ function PlatformCarouselCard({
           Keine Videos auf dieser Plattform in den Demo-Daten.
         </p>
       ) : (
-        <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-4 text-sm flex-1 w-full">
+        <dl className="grid grid-cols-3 gap-x-3 gap-y-2 text-sm flex-1 w-full">
           <div>
             <dt className="text-[var(--muted)] text-xs">Views</dt>
             <dd className="font-semibold tabular-nums text-base mt-0.5">
@@ -142,7 +143,7 @@ function PlatformCarouselCard({
           </div>
         </dl>
       )}
-      <p className="text-xs text-[var(--muted)] pt-1">Klicken für Großansicht & Report</p>
+      <p className="text-[10px] text-[var(--muted)]">Klick → Report</p>
     </button>
   );
 }
@@ -342,9 +343,13 @@ export function MetricsDashboard({
   planVersion,
   onGeneratePlanV2,
   planV2Loading,
+  nische = "Content",
+  monat,
+  research,
 }: MetricsDashboardProps) {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [reportCard, setReportCard] = useState<CarouselCard | null>(null);
+  const [platformsOpen, setPlatformsOpen] = useState(false);
 
   const displayRows = useMemo(() => {
     const base =
@@ -376,6 +381,7 @@ export function MetricsDashboard({
   const hasLivePerformance = performance.length > 0;
 
   useEffect(() => {
+    if (!platformsOpen) return;
     const el = carouselRef.current;
     if (!el) return;
 
@@ -419,46 +425,47 @@ export function MetricsDashboard({
       el.removeEventListener("mouseenter", onEnter);
       el.removeEventListener("mouseleave", onLeave);
     };
-  }, [carouselCards]);
+  }, [carouselCards, platformsOpen]);
 
   return (
-    <div className="space-y-8 w-full overflow-x-hidden">
+    <div className="space-y-5 w-full overflow-x-hidden">
       {reportCard && (
         <PlatformReportModal card={reportCard} onClose={() => setReportCard(null)} />
       )}
 
-      <header className="space-y-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-          <span className="text-[10px] uppercase tracking-wide rounded px-1.5 py-0.5 border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--muted)]">
-            Mock-Daten
-          </span>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
+            <span className="text-[10px] uppercase tracking-wide rounded px-1.5 py-0.5 border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--muted)]">
+              Mock-Daten
+            </span>
+          </div>
+          <p className="text-xs text-[var(--muted)] mt-1">
+            KPIs · Plattformen optional ausklappen · Feedback & Loop
+          </p>
         </div>
-        <p className="text-sm text-[var(--muted)] max-w-2xl">
-          KPIs oben, Plattform-Karussell scrollbar (ohne Leiste) — Karte anklicken
-          für den Report.
-        </p>
         {onImportMock && !hasLivePerformance && (
           <button
             type="button"
             disabled={importing}
             onClick={onImportMock}
-            className="text-sm rounded-lg border border-[var(--border)] px-4 py-2 disabled:opacity-50"
+            className="text-xs rounded-lg border border-[var(--border)] px-3 py-1.5 disabled:opacity-50"
           >
-            {importing ? "Import…" : "Plan-Metriken neu laden"}
+            {importing ? "Import…" : "Metriken laden"}
           </button>
         )}
       </header>
 
       <section
-        className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden"
+        className="rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden"
         aria-label="Wichtigste KPIs"
       >
         <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7">
           {kpiBar.map((k, i) => (
             <div
               key={k.label}
-              className={`px-5 py-4 ${
+              className={`px-4 py-3 ${
                 i < kpiBar.length - 1
                   ? "border-b sm:border-b-0 sm:border-r border-[var(--border)]"
                   : ""
@@ -467,7 +474,7 @@ export function MetricsDashboard({
               <p className="text-[10px] uppercase tracking-wider text-[var(--muted)] whitespace-nowrap">
                 {k.label}
               </p>
-              <p className="text-xl font-semibold tabular-nums mt-1 whitespace-nowrap">
+              <p className="text-lg font-semibold tabular-nums mt-0.5 whitespace-nowrap">
                 {k.value}
               </p>
             </div>
@@ -475,51 +482,62 @@ export function MetricsDashboard({
         </div>
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-medium text-[var(--muted)]">
-          Plattformen — wischen / scrollen
-        </h2>
-        <div
-          ref={carouselRef}
-          className="flex gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory no-scrollbar -mx-1 px-1 pb-1 cursor-grab active:cursor-grabbing"
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+        <button
+          type="button"
+          className="w-full flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-left hover:bg-[var(--surface-elevated)]/40 transition"
+          onClick={() => setPlatformsOpen((o) => !o)}
+          aria-expanded={platformsOpen}
         >
-          {carouselCards.map((card) => (
-            <PlatformCarouselCard
-              key={card.id}
-              label={card.label}
-              items={card.items}
-              stats={card.stats}
-              onOpen={() => setReportCard(card)}
-            />
-          ))}
-        </div>
+          <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
+            Plattformen
+          </span>
+          <span className="text-[11px] text-[var(--muted)]">
+            {platformsOpen ? "Einklappen ▴" : "Ausklappen ▾"}
+          </span>
+        </button>
+        {!platformsOpen && (
+          <p className="px-4 pb-3 text-[11px] text-[var(--muted)] leading-snug border-t border-[var(--border)] pt-2">
+            {carouselCards
+              .filter((c) => c.items.length > 0)
+              .map(
+                (c) =>
+                  `${c.label} ${c.stats.views.toLocaleString()} Views · ${c.items.length} Videos`
+              )
+              .join(" · ") || "Keine Plattform-Daten"}
+          </p>
+        )}
+        {platformsOpen && (
+          <div
+            ref={carouselRef}
+            className="flex gap-3 overflow-x-auto overflow-y-hidden snap-x snap-mandatory no-scrollbar px-4 pb-3 pt-1 border-t border-[var(--border)] cursor-grab active:cursor-grabbing"
+          >
+            {carouselCards.map((card) => (
+              <PlatformCarouselCard
+                key={card.id}
+                label={card.label}
+                items={card.items}
+                stats={card.stats}
+                onOpen={() => setReportCard(card)}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
-      <div className="grid xl:grid-cols-[1fr_360px] gap-8 items-start">
-        <div className="space-y-8">
-          {onGeneratePlanV2 && (
-            <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 space-y-3">
-              <h2 className="text-sm font-medium">Der Loop schließt sich</h2>
-              <p className="text-sm text-[var(--muted)] leading-relaxed">
-                Aus den Metriken werden Learnings je Bereich — daraus entsteht Plan
-                v2, der direkt im Kalender landet.
-              </p>
-              <button
-                type="button"
-                disabled={planV2Loading || !hasLivePerformance}
-                onClick={onGeneratePlanV2}
-                className={BTN_ACCENT}
-              >
-                {planV2Loading
-                  ? "Learnings & Plan v2…"
-                  : "Plan v2 aus Learnings generieren"}
-              </button>
-            </section>
-          )}
-          <LoopAnalysisView learnings={learnings ?? null} mock={learningsMock} />
-        </div>
-        <PlanDiffSummaryView diff={planDiff ?? null} activeVersion={planVersion} />
-      </div>
+      <DashboardFeedbackSection
+        learnings={learnings}
+        learningsMock={learningsMock}
+        planDiff={planDiff}
+        planVersion={planVersion}
+        onGeneratePlanV2={onGeneratePlanV2}
+        planV2Loading={planV2Loading}
+        hasLivePerformance={hasLivePerformance}
+        nische={nische}
+        monat={monat ?? new Date().toISOString().slice(0, 7)}
+        performance={displayRows}
+        research={research}
+      />
     </div>
   );
 }

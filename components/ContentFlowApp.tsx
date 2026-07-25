@@ -30,13 +30,14 @@ import type { BrainstormIdea } from "@/lib/brainstorm/contentPillars";
 import type { BereichGrouped, VideoWithInsights } from "@/lib/insights/types";
 import { computePlanDiff, type PlanDiffSummary } from "@/lib/planDiff";
 import { DEMO_DIFF } from "@/lib/demo/mockData";
-import { BTN_ACCENT, type AppMenuId } from "@/lib/ui/theme";
+import { BTN_ACCENT, BTN_PRIMARY, BTN_SECONDARY, INPUT_FIELD, type AppMenuId } from "@/lib/ui/theme";
 import { AppSidebar } from "@/components/shell/AppSidebar";
 import { CalendarPage } from "@/components/account/CalendarPage";
 import { TodosPage } from "@/components/account/TodosPage";
 import { AccountEmpty } from "@/components/account/AccountScreen";
 import { HumanLoopView } from "@/components/hitl/HumanLoopView";
 import { MetricsDashboard } from "@/components/dashboard/MetricsDashboard";
+import { PlanSetupFlowchart } from "@/components/setup/PlanSetupFlowchart";
 
 type Phase =
   | "setup"
@@ -55,9 +56,6 @@ const emptyAnswers: WizardAnswers = {
   noGos: "",
   zeitBudgetProWoche: "",
 };
-
-const btnPrimary =
-  "rounded-lg bg-[var(--surface-elevated)] border border-[var(--border)] px-4 py-2 text-sm font-medium hover:bg-[var(--surface)]";
 
 const STORAGE_KEY = "contentpilot.flow.v1";
 
@@ -255,17 +253,33 @@ export function ContentFlowApp() {
   }, []);
 
   const loadVideoDetail = useCallback(
-    async (video: VideoDetails) => {
-      if (video.skript?.hook) return;
+    async (video: VideoDetails, options?: { force?: boolean }) => {
+      const force = options?.force === true;
+      const needsDetail =
+        force ||
+        !video.skript?.hook?.trim() ||
+        !video.grafikVorschlag?.trim();
+      if (!needsDetail) return;
       setDetailLoading(true);
       setError(null);
+      const videoIdea = force
+        ? {
+            ...video,
+            skript: { hook: "", body: "", cta: "" },
+            grafikVorschlag: "",
+            referenzVideoUrl: "",
+            referenzBegruendung: "",
+            drehAnleitung: [],
+          }
+        : video;
       try {
         const res = await fetch("/api/plan/detail", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            videoIdea: video,
+            videoIdea,
             research: research ?? undefined,
+            forceRegenerate: force,
           }),
         });
         const data = await res.json();
@@ -278,6 +292,16 @@ export function ContentFlowApp() {
       }
     },
     [research, patchPlanVideo]
+  );
+
+  const selectVideo = useCallback(
+    (video: VideoDetails) => {
+      setSelectedVideo(video);
+      const needsDetail =
+        !video.skript?.hook?.trim() || !video.grafikVorschlag?.trim();
+      if (needsDetail) void loadVideoDetail(video);
+    },
+    [loadVideoDetail]
   );
 
   const importPerformance = useCallback(async () => {
@@ -645,7 +669,7 @@ export function ContentFlowApp() {
                 zyklus={zyklus}
                 selectedVideo={selectedVideo}
                 selectedDay={selectedVideo?.postingDay}
-                onSelectVideo={setSelectedVideo}
+                onSelectVideo={selectVideo}
                 onCloseDetail={() => setSelectedVideo(null)}
                 onLoadDetail={loadVideoDetail}
                 detailLoading={detailLoading}
@@ -661,7 +685,7 @@ export function ContentFlowApp() {
                 zyklus={zyklus}
                 productionGuide={productionGuide}
                 onSelectDay={(v) => {
-                  setSelectedVideo(v);
+                  selectVideo(v);
                   changeMenu("calendar");
                 }}
                 recordedIds={recordedIds}
@@ -674,7 +698,7 @@ export function ContentFlowApp() {
                   Erst Plan freigeben — dann erscheinen hier Dreh-Wochen und die
                   Checkliste.
                 </p>
-                <button type="button" onClick={openSetup} className={btnPrimary}>
+                <button type="button" onClick={openSetup} className={BTN_PRIMARY}>
                   Plan-Setup starten
                 </button>
               </div>
@@ -728,68 +752,99 @@ export function ContentFlowApp() {
               planVersion={planVersion}
               onGeneratePlanV2={zyklus ? () => generatePlanV2() : undefined}
               planV2Loading={planV2Loading}
+              nische={briefing?.praezisierteNische ?? zyklus?.nische ?? "Content"}
+              monat={zyklus?.monat}
+              research={research}
             />
           )}
 
       {showSetup && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-black/60 p-4 sm:p-6"
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-black/75 p-4 sm:p-6"
           role="dialog"
           aria-modal="true"
           aria-labelledby="setup-title"
           onClick={() => closeSetup()}
         >
           <div
-            className="w-full max-w-2xl rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8 space-y-6 my-6 sm:my-10 shadow-xl shrink-0"
+            className="w-full max-w-4xl rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-6 sm:p-8 space-y-6 my-6 sm:my-10 shadow-2xl shadow-black/50 shrink-0"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-start gap-4">
               <div>
-                <h2 id="setup-title" className="text-xl font-semibold">
+                <h2 id="setup-title" className="text-xl sm:text-2xl font-semibold text-[var(--foreground)]">
                   Plan-Setup
                 </h2>
-                <p className="text-sm text-[var(--muted)] mt-1">
-                  Nische, Fragen, Briefing — Brainstorm & Research unter Human in
-                  the Loop. Du kannst jederzeit abbrechen und im Menü weiterarbeiten.
+                <p className="text-sm text-[var(--muted-strong)] mt-2 max-w-xl leading-relaxed">
+                  In wenigen Schritten zu deinem 30-Tage-Plan. Jederzeit beenden — dein
+                  Fortschritt bleibt im Menü erhalten.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => closeSetup()}
-                className="text-sm text-[var(--muted)] hover:text-[var(--foreground)] shrink-0"
+                className="text-sm font-medium text-[var(--foreground)] underline-offset-2 hover:underline shrink-0"
               >
-                Beenden & zum Menü
+                Beenden
               </button>
             </div>
 
+            <PlanSetupFlowchart
+              phase={phase}
+              wizardStep={wizardStep}
+              wizardTotal={WIZARD_QUESTIONS.length}
+              planReady={planFertig}
+            />
+
             {phase === "setup" && (
-              <section className="space-y-4">
-                <label className="block text-sm font-medium">Content-Nische</label>
-                <input
-                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2.5 bg-[var(--background)]"
-                  placeholder="Personal Branding für Handwerker"
-                  value={nische}
-                  onChange={(e) => setNische(e.target.value)}
-                />
-                <label className="block text-sm font-medium">Referent Creator</label>
-                <input
-                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2.5 bg-[var(--background)]"
-                  placeholder="Creator, dessen Stil dich inspiriert"
-                  value={referentCreator}
-                  onChange={(e) => setReferentCreator(e.target.value)}
-                />
-                <button type="button" onClick={startWizard} className={BTN_ACCENT}>
-                  Weiter zu 5 Fragen
+              <section className="space-y-5">
+                <div className="space-y-2">
+                  <label htmlFor="setup-nische" className="block text-sm font-semibold text-[var(--foreground)]">
+                    Content-Nische
+                  </label>
+                  <p className="text-xs text-[var(--muted)]">
+                    Worum geht es in deinem Content? z. B. Branche oder Thema.
+                  </p>
+                  <input
+                    id="setup-nische"
+                    autoFocus
+                    className={INPUT_FIELD}
+                    placeholder="z. B. Personal Branding für Handwerker"
+                    value={nische}
+                    onChange={(e) => setNische(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="setup-referent" className="block text-sm font-semibold text-[var(--foreground)]">
+                    Referent Creator <span className="font-normal text-[var(--muted)]">(optional)</span>
+                  </label>
+                  <input
+                    id="setup-referent"
+                    className={INPUT_FIELD}
+                    placeholder="Creator, dessen Stil dich inspiriert"
+                    value={referentCreator}
+                    onChange={(e) => setReferentCreator(e.target.value)}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={startWizard}
+                  disabled={!nische.trim()}
+                  className={`${BTN_PRIMARY} w-full sm:w-auto`}
+                >
+                  Weiter — 5 kurze Fragen
                 </button>
               </section>
             )}
 
             {phase === "wizard" && currentQuestion && currentKey && (
               <section className="space-y-4">
-                <p className="text-sm text-[var(--muted)]">
-                  Frage {wizardStep + 1} / {WIZARD_QUESTIONS.length}
+                <p className="text-sm font-medium text-[var(--muted-strong)]">
+                  Frage {wizardStep + 1} von {WIZARD_QUESTIONS.length}
                 </p>
-                <label className="block font-medium">{currentQuestion.label}</label>
+                <label className="block text-base font-semibold text-[var(--foreground)]">
+                  {currentQuestion.label}
+                </label>
                 <WizardQuestionField
                   question={currentQuestion}
                   value={answers[currentKey]}
@@ -801,7 +856,7 @@ export function ContentFlowApp() {
                   {wizardStep > 0 && (
                     <button
                       type="button"
-                      className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm"
+                      className={BTN_SECONDARY}
                       onClick={() => setWizardStep((s) => s - 1)}
                     >
                       Zurück
@@ -810,7 +865,7 @@ export function ContentFlowApp() {
                   {wizardStep < WIZARD_QUESTIONS.length - 1 ? (
                     <button
                       type="button"
-                      className={btnPrimary}
+                      className={BTN_PRIMARY}
                       disabled={!hasWizardAnswer(answers[currentKey])}
                       onClick={() => setWizardStep((s) => s + 1)}
                     >
@@ -909,13 +964,13 @@ export function ContentFlowApp() {
                   </div>
                 </section>
               )}
-            <div className="pt-2 border-t border-[var(--border)]">
+            <div className="pt-4 border-t border-[var(--border)]">
               <button
                 type="button"
                 onClick={() => closeSetup()}
-                className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
+                className="text-sm text-[var(--muted-strong)] hover:text-[var(--foreground)]"
               >
-                Setup beenden — zurück zum Menü (Esc)
+                Esc — Setup schließen, Menü bleibt offen
               </button>
             </div>
           </div>

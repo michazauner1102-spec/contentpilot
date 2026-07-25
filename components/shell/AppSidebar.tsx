@@ -30,12 +30,12 @@ export function AppSidebar({
             onClick={() => onChange(item.id)}
             className={`text-left rounded-lg px-3 py-2.5 transition ${
               active === item.id
-                ? "bg-[var(--surface-elevated)] border border-[var(--border)]"
-                : "hover:bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--foreground)]"
+                ? "bg-[var(--surface-elevated)] border border-[var(--border)] text-[var(--foreground)]"
+                : "hover:bg-[var(--surface)] text-[var(--muted-strong)] hover:text-[var(--foreground)]"
             }`}
           >
             <span className="block text-sm font-medium">{item.label}</span>
-            <span className="block text-[11px] opacity-70 mt-0.5">
+            <span className="block text-[11px] text-[var(--muted)] mt-0.5">
               {item.description}
             </span>
           </button>

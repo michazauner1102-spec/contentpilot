@@ -1,4 +1,5 @@
 import type { Bereich } from "@/lib/types";
+import { CompositeInsightsProvider } from "./compositeInsightsProvider";
 import { MockInsightsProvider } from "./mockInsightsProvider";
 import type {
   BereichGrouped,
@@ -12,6 +13,15 @@ export class InsightsService {
 
   static withMockData(): InsightsService {
     return new InsightsService(new MockInsightsProvider());
+  }
+
+  /** mock (Default) oder live — plattformweise API-Keys aus .env */
+  static fromEnv(): InsightsService {
+    const mode = (process.env.INSIGHTS_MODE ?? "mock").toLowerCase();
+    if (mode === "mock") {
+      return InsightsService.withMockData();
+    }
+    return new InsightsService(new CompositeInsightsProvider());
   }
 
   async importPerformance(videos: VideoMeta[]): Promise<VideoWithInsights[]> {

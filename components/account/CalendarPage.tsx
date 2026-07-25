@@ -12,7 +12,10 @@ interface CalendarPageProps {
   selectedDay?: number;
   onSelectVideo: (v: VideoDetails) => void;
   onCloseDetail: () => void;
-  onLoadDetail: (v: VideoDetails) => void;
+  onLoadDetail: (
+    v: VideoDetails,
+    options?: { force?: boolean }
+  ) => void;
   detailLoading: boolean;
   planVersion?: 1 | 2;
 }

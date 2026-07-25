@@ -1,4 +1,4 @@
-import { callClaudeJSON } from "@/lib/claude";
+import { isLlmConfigured, callClaudeJSON } from "@/lib/llm";
 import { runWebResearch } from "@/lib/webResearch";
 import { firecrawlSearch } from "@/lib/trends/firecrawlClient";
 import type { WizardAnswerKey } from "@/lib/onboarding/wizardQuestions";
@@ -107,7 +107,7 @@ export async function draftTrendSuggestions(input: {
 
   const researchSnippet = snippets.slice(0, 5).join("\n\n---\n\n");
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!isLlmConfigured()) {
     return {
       suggestions: mockDrafts(
         input.questionId,

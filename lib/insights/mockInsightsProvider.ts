@@ -12,7 +12,48 @@ function hashSeed(id: string): number {
   return Math.abs(h);
 }
 
-function metricsForBereich(bereich: Bereich, seed: number): InsightsMetrics {
+function applyPlatformBias(
+  platform: Platform,
+  metrics: InsightsMetrics
+): InsightsMetrics {
+  switch (platform) {
+    case "tiktok":
+      return {
+        ...metrics,
+        views: Math.round(metrics.views * 1.45),
+        completionRate: Math.min(0.92, metrics.completionRate * 1.08),
+        shares: Math.round(metrics.shares * 1.35),
+      };
+    case "instagram":
+      return {
+        ...metrics,
+        saves: Math.round(metrics.saves * 1.55),
+        profileVisits: Math.round(metrics.profileVisits * 1.25),
+        shares: Math.round(metrics.shares * 1.15),
+      };
+    case "linkedin":
+      return {
+        ...metrics,
+        linkClicks: Math.round(metrics.linkClicks * 2.1),
+        comments: Math.round(metrics.comments * 1.35),
+        follows: Math.round(metrics.follows * 1.2),
+      };
+    case "youtube":
+      return {
+        ...metrics,
+        watchTimeSeconds: Math.round(metrics.watchTimeSeconds * 1.35),
+        views: Math.round(metrics.views * 1.1),
+      };
+    default:
+      return metrics;
+  }
+}
+
+function metricsForBereich(
+  bereich: Bereich,
+  seed: number,
+  platform: Platform
+): InsightsMetrics {
   const base = 1000 + (seed % 5000);
   const jitter = (n: number, spread: number) =>
     Math.max(0, Math.round(n + ((seed % 100) / 100 - 0.5) * spread));
@@ -44,7 +85,7 @@ function metricsForBereich(bereich: Bereich, seed: number): InsightsMetrics {
     common.bookings = jitter(6, 10);
   }
 
-  return common;
+  return applyPlatformBias(platform, common);
 }
 
 export class MockInsightsProvider implements InsightsProvider {
@@ -53,7 +94,7 @@ export class MockInsightsProvider implements InsightsProvider {
       const seed = hashSeed(video.id);
       return {
         ...video,
-        metrics: metricsForBereich(video.bereich, seed),
+        metrics: metricsForBereich(video.bereich, seed, video.platform),
       };
     });
   }

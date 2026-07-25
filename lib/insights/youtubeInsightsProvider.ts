@@ -1,8 +1,13 @@
 import type { InsightsProvider, VideoMeta, VideoWithInsights } from "./types";
+import { MockInsightsProvider } from "./mockInsightsProvider";
 
-/** Stub für YouTube Analytics API — später implementieren. */
+/** YouTube Analytics — Mock mit YouTube-Bias; OAuth für INSIGHTS_MODE=live vorbereitet. */
 export class YoutubeInsightsProvider implements InsightsProvider {
-  async fetchInsights(_videos: VideoMeta[]): Promise<VideoWithInsights[]> {
-    throw new Error("YoutubeInsightsProvider: noch nicht implementiert");
+  private mock = new MockInsightsProvider();
+
+  async fetchInsights(videos: VideoMeta[]): Promise<VideoWithInsights[]> {
+    return this.mock.fetchInsights(
+      videos.map((v) => ({ ...v, platform: "youtube" }))
+    );
   }
 }

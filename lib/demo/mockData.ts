@@ -7,6 +7,7 @@ import type {
 } from "@/lib/types";
 import { DEFAULT_BEREICH_MIX } from "@/lib/types";
 import type { VideoWithInsights } from "@/lib/insights/types";
+import { mergeDemoVideoDetails } from "@/lib/demo/videoScriptDemo";
 
 export const DEMO_NISCHE = "Personal Branding für Handwerker";
 
@@ -26,8 +27,6 @@ export const DEMO_RESEARCH: ResearchResult = {
   tonality: "Direkt, bodenständig, ohne Marketing-Buzzwords",
 };
 
-const DETAIL_DAYS = new Set([1, 5, 10, 15, 20, 25]);
-
 function makeVideo(day: number): VideoDetails {
   const bereich =
     day <= 18 ? "reichweite" : day <= 26 ? "vertrauen" : "conversion";
@@ -37,9 +36,7 @@ function makeVideo(day: number): VideoDetails {
   const platform = platforms[(day - 1) % 3];
   const id = `demo-day-${String(day).padStart(2, "0")}`;
 
-  const detailed = DETAIL_DAYS.has(day);
-
-  return {
+  const base: VideoDetails = {
     id,
     postingDay: day,
     bereich,
@@ -58,42 +55,14 @@ function makeVideo(day: number): VideoDetails {
           ? "Ich zeige dir heute den echten Ablauf hinter meinem Projekt."
           : "Du willst Anfragen? Dann mach genau diesen einen Schritt.",
     begruendung: `Passt zum Mix (${bereich}) und zur Demo-Nische Handwerker.`,
-    skript: detailed
-      ? {
-          hook: "Kurzer Pattern-Interrupt in den ersten 2 Sekunden.",
-          body: "Ein konkretes Beispiel aus dem Handwerksalltag — Problem, Lösung, Beweis.",
-          cta:
-            bereich === "conversion"
-              ? "Link in Bio — kostenloses Erstgespräch buchen."
-              : bereich === "vertrauen"
-                ? "Speichern, wenn du das nächste Mal vor der Kamera stehst."
-                : "Teil 2 kommt morgen — folgen, wenn du den Rest willst.",
-        }
-      : { hook: "", body: "", cta: "" },
-    grafikVorschlag: detailed
-      ? "Großer Text-Overlay: „3 Fehler“ + Gesicht links, Werkzeug rechts, hoher Kontrast."
-      : "",
-    referenzVideoUrl: detailed ? "https://www.youtube.com/watch?v=jNQXAC9IVRw" : "",
-    referenzBegruendung: detailed
-      ? "Kurzes Talking-Head mit starkem Einstieg — ähnliche Zielgruppe."
-      : "",
-    drehAnleitung: detailed
-      ? [
-          {
-            setting: "Werkstatt, Tageslicht",
-            einstellungsgroesse: "Halbtotale",
-            inhalt: "Du sprichst direkt in die Kamera",
-            ungefaehreDauerSekunden: 8,
-          },
-          {
-            setting: "Detail B-Roll",
-            einstellungsgroesse: "Nahaufnahme",
-            inhalt: "Hände an Werkzeug / Ergebnis",
-            ungefaehreDauerSekunden: 5,
-          },
-        ]
-      : [],
+    skript: { hook: "", body: "", cta: "" },
+    grafikVorschlag: "",
+    referenzVideoUrl: "",
+    referenzBegruendung: "",
+    drehAnleitung: [],
   };
+
+  return mergeDemoVideoDetails(base, DEMO_RESEARCH);
 }
 
 export function buildDemoZyklus(version: 1 | 2): Zyklus {
@@ -207,4 +176,5 @@ export const DEMO_DIFF = {
   ],
 };
 
-export const DETAILED_DAY_SET = DETAIL_DAYS;
+/** Tage mit Showcase-Details (Screenshots, Prefetch). */
+export const DETAILED_DAY_SET = new Set([1, 5, 10, 15, 20, 25]);

@@ -7,6 +7,7 @@ import {
   type WizardAnswerKey,
 } from "@/lib/onboarding/wizardQuestions";
 import { TrendSuggestionPanel } from "@/components/TrendSuggestionPanel";
+import { INPUT_FIELD } from "@/lib/ui/theme";
 
 interface WizardQuestionFieldProps {
   question: WizardQuestion;
@@ -26,7 +27,7 @@ export function WizardQuestionField({
   return (
     <div className="space-y-4">
       {question.hint && (
-        <p className="text-sm text-[var(--muted)] bg-[var(--surface-elevated)] rounded-lg px-3 py-2">
+        <p className="text-sm text-[var(--muted-strong)] bg-[var(--background)] border border-[var(--border)] rounded-lg px-3 py-2.5 leading-relaxed">
           {question.hint}
         </p>
       )}
@@ -38,7 +39,7 @@ export function WizardQuestionField({
           </label>
           <select
             id={`select-${question.id}`}
-            className="w-full rounded-lg border border-[var(--border)] px-3 py-2.5 bg-[var(--background)] text-sm"
+            className={`${INPUT_FIELD} text-sm`}
             value={
               question.selectOptions.find((o) => o.value === value)?.value ?? ""
             }
@@ -76,10 +77,10 @@ export function WizardQuestionField({
                   key={chip}
                   type="button"
                   onClick={() => onChange(toggleChipInAnswer(value, chip))}
-                  className={`rounded-full border px-3 py-1.5 text-xs transition ${
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                     active
-                      ? "border-[var(--accent)] bg-[var(--surface-elevated)]"
-                      : "border-[var(--border)] text-[var(--muted)] hover:bg-[var(--surface)]"
+                      ? "border-[var(--foreground)]/40 bg-[var(--accent)]/25 text-[var(--foreground)]"
+                      : "border-[var(--border)] text-[var(--muted-strong)] hover:border-[var(--accent)]/50 hover:text-[var(--foreground)]"
                   }`}
                 >
                   {chip}
@@ -108,7 +109,7 @@ export function WizardQuestionField({
         </label>
         <textarea
           id={`answer-${question.id}`}
-          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 min-h-[100px] bg-[var(--background)] text-sm"
+          className={`${INPUT_FIELD} min-h-[120px] resize-y`}
           placeholder={question.placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}

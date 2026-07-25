@@ -20,3 +20,6 @@ next-env.d.ts
 
 # playwright (local browsers under node_modules)
 /playwright/.cache/
+
+/demo/video/*.webm
+/demo/video/*.mp4

@@ -14,7 +14,10 @@ interface AccountScreenProps {
   selectedDay?: number;
   onSelectVideo: (v: VideoDetails) => void;
   onCloseDetail: () => void;
-  onLoadDetail: (v: VideoDetails) => void;
+  onLoadDetail: (
+    v: VideoDetails,
+    options?: { force?: boolean }
+  ) => void;
   detailLoading: boolean;
   recordedIds: string[];
   onToggleRecorded: (id: string) => void;

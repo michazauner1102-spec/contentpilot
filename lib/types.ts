@@ -41,6 +41,57 @@ export interface LoopLearnings {
 
 export type LoopAnalysisResult = LoopLearnings[];
 
+export type CommentKategorie =
+  | "frage"
+  | "feedback"
+  | "lead"
+  | "kritik"
+  | "lob"
+  | "spam";
+
+export interface SocialComment {
+  id: string;
+  videoId: string;
+  videoTitle: string;
+  postingDay: number;
+  platform: Platform;
+  text: string;
+  likes?: number;
+}
+
+export interface AnalyzedComment extends SocialComment {
+  sinnvoll: boolean;
+  kategorie: CommentKategorie;
+  zusammenfassung: string;
+  handlungsempfehlung?: string;
+}
+
+export interface MonthlyFeedbackVorschlag {
+  titel: string;
+  beschreibung: string;
+  prioritaet: "hoch" | "mittel" | "niedrig";
+}
+
+export interface MonthlyFeedbackDocument {
+  monat: string;
+  nische: string;
+  erstelltAm: string;
+  executiveSummary: string;
+  trends: string[];
+  wasGut: string[];
+  wasSchlecht: string[];
+  konkreteVorschlaege: MonthlyFeedbackVorschlag[];
+  kommentarAnalyse: {
+    gesamtKommentare: number;
+    sinnvolleAnzahl: number;
+    highlights: AnalyzedComment[];
+    themenAusKommentaren: string[];
+    zuIgnorieren: string[];
+  };
+  learningsByBereich?: LoopAnalysisResult;
+  mock?: boolean;
+}
+
 export interface ResearchResult {
   zielgruppe: string;
   painPoints: [string, string, string];
@@ -54,6 +105,8 @@ export interface ReferenzVideo {
   format: VideoFormat;
   viewCount?: number;
   videoId?: string;
+  /** Quelle: YouTube, TikTok, Instagram (Meta), LinkedIn */
+  platform?: Platform;
 }
 
 export interface PlanGenerateInput {

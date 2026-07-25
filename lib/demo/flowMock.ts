@@ -7,8 +7,8 @@ import type {
   VideoIdea,
   WizardAnswers,
 } from "@/lib/types";
-import { BEREICH_LABELS } from "@/lib/types";
 import { buildDemoZyklus, DEMO_RESEARCH } from "@/lib/demo/mockData";
+import { mergeDemoVideoDetails } from "@/lib/demo/videoScriptDemo";
 
 export function mockCreatorSuggestion(
   referentCreator: string
@@ -106,52 +106,17 @@ export function mockZyklusFromBriefing(briefing: ContentBriefing) {
   return { ...z, nische: briefing.praezisierteNische };
 }
 
-const MOCK_CTA: Record<string, string> = {
-  reichweite: "Folgen, wenn du Teil 2 morgen sehen willst.",
-  vertrauen: "Speichern — beim nächsten Mal brauchst du das.",
-  conversion: "Schreib mir „START“ als DM — ich melde mich persönlich.",
-};
-
 export function mockVideoDetails(
   idea: VideoIdea,
   research?: ResearchResult
 ): VideoDetails {
-  const painPoint = research?.painPoints?.[0] ?? "das häufigste Problem";
-  return {
+  const shell: VideoDetails = {
     ...idea,
-    skript: {
-      hook: idea.hook || `Pattern-Interrupt zu „${idea.title}“ in den ersten 2 Sekunden.`,
-      body: `Ein konkretes Beispiel zu ${painPoint}: erst die Situation zeigen, dann deine Lösung in 2 Schritten, dann der Beweis (Ergebnis, Zahl oder Kundenreaktion). Kurze Sätze, ein Gedanke pro Schnitt.`,
-      cta: MOCK_CTA[idea.bereich] ?? "Folgen für mehr.",
-    },
-    grafikVorschlag: `Text-Overlay „${idea.title}“ oben, Gesicht links, Beweisbild rechts — hoher Kontrast, 9:16.`,
+    skript: { hook: "", body: "", cta: "" },
+    grafikVorschlag: "",
     referenzVideoUrl: "",
-    referenzBegruendung: `Format ${idea.format} passt zum Bereich ${BEREICH_LABELS[idea.bereich]} an Tag ${idea.postingDay}.`,
-    drehAnleitung: [
-      {
-        setting: "Hauptset, Tageslicht seitlich",
-        einstellungsgroesse: "Halbnah",
-        inhalt: "Hook direkt in die Kamera, kein Intro",
-        ungefaehreDauerSekunden: 3,
-      },
-      {
-        setting: "Gleiches Set, halber Schritt zur Seite",
-        einstellungsgroesse: "Nah",
-        inhalt: "Problem benennen, Zuschauer abholen",
-        ungefaehreDauerSekunden: 7,
-      },
-      {
-        setting: "B-Roll am Objekt / Bildschirm",
-        einstellungsgroesse: "Detail",
-        inhalt: "Lösung zeigen statt erzählen",
-        ungefaehreDauerSekunden: 12,
-      },
-      {
-        setting: "Zurück zum Hauptset",
-        einstellungsgroesse: "Halbnah",
-        inhalt: "CTA ruhig und konkret aussprechen",
-        ungefaehreDauerSekunden: 5,
-      },
-    ],
+    referenzBegruendung: "",
+    drehAnleitung: [],
   };
+  return mergeDemoVideoDetails(shell, research);
 }

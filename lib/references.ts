@@ -1,36 +1,10 @@
-import { callClaudeJSON } from "@/lib/claude";
+import { callLLMJSON } from "@/lib/claude";
 import type { ReferenzVideo, ResearchResult, VideoFormat } from "@/lib/types";
+import { findReferenzVideosMultiPlatform } from "@/lib/references/multiPlatform";
 
-interface YtSearchItem {
-  id?: { videoId?: string };
-  snippet?: { title?: string };
-}
-
-async function youtubeSearch(
-  query: string,
-  maxResults: number
-): Promise<{ videoId: string; title: string }[]> {
-  const key = process.env.YOUTUBE_API_KEY;
-  if (!key) return [];
-
-  const url = new URL("https://www.googleapis.com/youtube/v3/search");
-  url.searchParams.set("part", "snippet");
-  url.searchParams.set("q", query);
-  url.searchParams.set("type", "video");
-  url.searchParams.set("maxResults", String(maxResults));
-  url.searchParams.set("order", "viewCount");
-  url.searchParams.set("key", key);
-
-  const res = await fetch(url.toString());
-  if (!res.ok) return [];
-
-  const data = (await res.json()) as { items?: YtSearchItem[] };
-  return (data.items ?? [])
-    .map((item) => ({
-      videoId: item.id?.videoId ?? "",
-      title: item.snippet?.title ?? "Unbekannt",
-    }))
-    .filter((v) => v.videoId);
+interface YtStats {
+  id?: string;
+  statistics?: { viewCount?: string };
 }
 
 async function fetchViewCounts(
@@ -47,9 +21,7 @@ async function fetchViewCounts(
   const res = await fetch(url.toString());
   if (!res.ok) return {};
 
-  const data = (await res.json()) as {
-    items?: { id?: string; statistics?: { viewCount?: string } }[];
-  };
+  const data = (await res.json()) as { items?: YtStats[] };
   const map: Record<string, number> = {};
   for (const item of data.items ?? []) {
     if (item.id) {
@@ -59,60 +31,80 @@ async function fetchViewCounts(
   return map;
 }
 
-function fallbackReferenzen(nische: string): ReferenzVideo[] {
-  return [
-    {
-      url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      title: `${nische} — Talking Head Beispiel`,
-      format: "talking_head",
-    },
-    {
-      url: "https://www.youtube.com/watch?v=jNQXAC9IVRw",
-      title: `${nische} — Tutorial Format`,
-      format: "tutorial",
-    },
-    {
-      url: "https://www.youtube.com/watch?v=9bZkp7q19f0",
-      title: `${nische} — Story Format`,
-      format: "story",
-    },
-  ];
-}
-
 export async function findReferenzVideos(
   nische: string,
   research: ResearchResult
 ): Promise<ReferenzVideo[]> {
-  const query = `${nische} ${research.painPoints[0] ?? ""} short video`;
-  let raw = await youtubeSearch(query, 8);
-
+  const raw = await findReferenzVideosMultiPlatform(nische, research);
   if (raw.length === 0) {
-    raw = await youtubeSearch(nische, 5);
+    return findReferenzVideosMultiPlatform(nische, {
+      ...research,
+      painPoints:
+        research.painPoints.length > 0
+          ? research.painPoints
+          : ["Content-Ideen", "Sichtbarkeit", "Zeitmangel"],
+    });
   }
 
-  if (raw.length === 0) {
-    return fallbackReferenzen(nische);
+  const youtubeIds = raw
+    .filter((r) => r.platform === "youtube" && r.url.includes("watch?v="))
+    .map((r) => {
+      if (r.videoId) return r.videoId;
+      try {
+        return new URL(r.url).searchParams.get("v") ?? "";
+      } catch {
+        return "";
+      }
+    })
+    .filter(Boolean);
+
+  const viewCounts = await fetchViewCounts(youtubeIds);
+
+  const ytForClassify = raw
+    .filter((r) => r.platform === "youtube" && r.url.includes("watch?v="))
+    .map((r) => ({
+      videoId: r.videoId ?? new URL(r.url).searchParams.get("v") ?? "",
+      title: r.title,
+    }))
+    .filter((r) => r.videoId);
+
+  let formatMap = new Map<string, VideoFormat>();
+  if (ytForClassify.length > 0) {
+    try {
+      const classified = await callLLMJSON<
+        { videos: { videoId: string; format: VideoFormat }[] }
+      >(
+        `Klassifiziere Videos in genau eines: talking_head, tutorial, story, b_roll.`,
+        JSON.stringify({ nische, titles: ytForClassify }),
+        `{ "videos": [{ "videoId": "string", "format": "talking_head|tutorial|story|b_roll" }] }`
+      );
+      formatMap = new Map(classified.videos.map((v) => [v.videoId, v.format]));
+    } catch {
+      /* Formate bleiben Default */
+    }
   }
 
-  const viewCounts = await fetchViewCounts(raw.map((r) => r.videoId));
+  return raw.map((r) => {
+    const videoId =
+      r.videoId ??
+      (r.platform === "youtube" && r.url.includes("watch?v=")
+        ? (() => {
+            try {
+              return new URL(r.url).searchParams.get("v") ?? undefined;
+            } catch {
+              return undefined;
+            }
+          })()
+        : undefined);
 
-  const classified = await callClaudeJSON<
-    { videos: { videoId: string; format: VideoFormat }[] }
-  >(
-    `Klassifiziere YouTube-Videos in genau eines: talking_head, tutorial, story, b_roll.`,
-    JSON.stringify({ nische, titles: raw }),
-    `{ "videos": [{ "videoId": "string", "format": "talking_head|tutorial|story|b_roll" }] }`
-  );
-
-  const formatMap = new Map(
-    classified.videos.map((v) => [v.videoId, v.format])
-  );
-
-  return raw.map((r) => ({
-    videoId: r.videoId,
-    url: `https://www.youtube.com/watch?v=${r.videoId}`,
-    title: r.title,
-    format: formatMap.get(r.videoId) ?? "talking_head",
-    viewCount: viewCounts[r.videoId],
-  }));
+    return {
+      ...r,
+      videoId,
+      format:
+        videoId && formatMap.has(videoId)
+          ? formatMap.get(videoId)!
+          : r.format,
+      viewCount: videoId ? viewCounts[videoId] : r.viewCount,
+    };
+  });
 }
