@@ -142,9 +142,6 @@ function rebalanceMix(ideas: VideoIdea[]): VideoIdea[] {
   return sorted;
 }
 
-export function buildZyklusId(nische: string, version: number): string {
-  const slug = nische.toLowerCase().replace(/\s+/g, "-").slice(0, 24);
-  return `${slug}-v${version}-${Date.now()}`;
-}
+export { buildZyklusId } from "@/lib/plan/zyklusId";
 
 export type { ResearchResult, ReferenzVideo, VideoFormat, Platform };

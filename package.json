@@ -20,7 +20,8 @@
     "screenshots": "tsx scripts/capture-readme-screenshots.ts",
     "demo:video": "tsx scripts/record-demo-video.ts",
     "pitch-screenshots-hd": "tsx scripts/capture-pitch-screenshots-hd.ts",
-    "verify:llm": "tsx scripts/verify-llm.ts"
+    "verify:llm": "tsx scripts/verify-llm.ts",
+    "test:smoke": "tsx scripts/smoke-test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",

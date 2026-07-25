@@ -128,10 +128,12 @@ npm run dev
 |--------|---------|
 | **Öffentliche Demo** | `FORCE_MOCK_ONLY=true` (siehe [`render.yaml`](render.yaml)) |
 | **Echte KI lokal** | `FORCE_MOCK_ONLY=false` + **ein** LLM: `LLM_PROVIDER` + passender Key |
+| **Ohne API-Key (lokal)** | `LLM_PROVIDER=claude-cli` — nutzt die eingeloggte `claude` CLI (Abo), kein Key |
 
-| Provider | Key |
+| Provider | Key / Voraussetzung |
 |----------|-----|
 | Anthropic (Default) | `ANTHROPIC_API_KEY` |
+| Claude CLI | `claude` CLI installiert & eingeloggt — **kein Key**, nur lokal (nicht auf Render); `LLM_MODEL=haiku\|sonnet\|opus` |
 | Gemini | `GOOGLE_GENERATIVE_AI_API_KEY` / `GEMINI_API_KEY` |
 | OpenAI | `OPENAI_API_KEY` |
 

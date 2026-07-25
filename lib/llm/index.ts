@@ -2,6 +2,7 @@ import { getLlmConfig, isLlmConfigured } from "./config";
 import { anthropicJson, anthropicText } from "./providers/anthropic";
 import { geminiJson, geminiText } from "./providers/gemini";
 import { openaiJson, openaiText } from "./providers/openai";
+import { claudeCliJson, claudeCliText } from "./providers/claudeCli";
 
 export { getLlmConfig, isLlmConfigured, llmConfiguredLabel } from "./config";
 
@@ -27,6 +28,8 @@ export async function callLLMJSON<T>(
   const { provider, model } = getLlmConfig();
 
   switch (provider) {
+    case "claude-cli":
+      return claudeCliJson<T>(model, system, user, schemaHint);
     case "anthropic":
       return anthropicJson<T>(
         model,
@@ -53,6 +56,8 @@ export async function callLLMText(system: string, user: string): Promise<string>
   const { provider, model } = getLlmConfig();
 
   switch (provider) {
+    case "claude-cli":
+      return claudeCliText(model, system, user);
     case "anthropic":
       return anthropicText(model, process.env.ANTHROPIC_API_KEY!, system, user);
     case "gemini":

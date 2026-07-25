@@ -27,14 +27,13 @@ import {
 } from "@/lib/research/themenBlocks";
 import type { ResearchThemenBlock } from "@/lib/research/themenBlocks";
 import {
-  parseWebResearchProvider,
   webResearchSourceLabel,
   type WebResearchProviderId,
 } from "@/lib/research/webResearchProviders";
 import type { BrainstormIdea } from "@/lib/brainstorm/contentPillars";
 import type { BereichGrouped, VideoWithInsights } from "@/lib/insights/types";
 import type { ImportScheduleResult } from "@/lib/plan/importExternalSchedule";
-import { buildZyklusId } from "@/lib/planGenerator";
+import { buildZyklusId } from "@/lib/plan/zyklusId";
 import { computePlanDiff, type PlanDiffSummary } from "@/lib/planDiff";
 import {
   cloneZyklusForMonth,
@@ -44,22 +43,32 @@ import {
 import { DEMO_DIFF } from "@/lib/demo/mockData";
 import { BTN_ACCENT, BTN_PRIMARY, BTN_SECONDARY, INPUT_FIELD, type AppMenuId } from "@/lib/ui/theme";
 import { AppSidebar } from "@/components/shell/AppSidebar";
+import { LoadingIndicator } from "@/components/shell/LoadingIndicator";
+import type { LoadingTaskId } from "@/lib/ui/loadingTasks";
 import { CalendarPage } from "@/components/account/CalendarPage";
 import { TodosPage } from "@/components/account/TodosPage";
 import { AccountEmpty } from "@/components/account/AccountScreen";
 import { HumanLoopView } from "@/components/hitl/HumanLoopView";
 import { MetricsDashboard } from "@/components/dashboard/MetricsDashboard";
 import { PlanSetupFlowchart } from "@/components/setup/PlanSetupFlowchart";
-
-type Phase =
-  | "setup"
-  | "wizard"
-  | "briefing"
-  | "brainstorm"
-  | "research"
-  | "plan"
-  | "production"
-  | "done";
+import {
+  applyPersistedFlow,
+  type FlowStateSetters,
+} from "@/lib/accounts/applyFlowState";
+import {
+  createAccountRecord,
+  deleteAccountRecord,
+  emptyPersistedFlow,
+  ensureAccountsRegistry,
+  loadFlowForAccount,
+  removeFlowForAccount,
+  renameAccountRecord,
+  saveFlowForAccount,
+  setActiveAccountInRegistry,
+  type AccountMeta,
+  type FlowPhase,
+  type PersistedFlow,
+} from "@/lib/accounts/flowPersistence";
 
 const emptyAnswers: WizardAnswers = {
   zielgruppeDetail: "",
@@ -69,32 +78,6 @@ const emptyAnswers: WizardAnswers = {
   zeitBudgetProWoche: "",
 };
 
-const STORAGE_KEY = "contentpilot.flow.v1";
-
-interface PersistedFlow {
-  phase: Phase;
-  menu: AppMenuId;
-  nische: string;
-  referentCreator: string;
-  answers: WizardAnswers;
-  creatorSuggestion: CreatorReferenceSuggestion | null;
-  briefing: ContentBriefing | null;
-  research: (ResearchResult & { researchNotizen?: string }) | null;
-  researchCycle: number;
-  researchThemen: ResearchThemenBlock[];
-  researchWebProvider?: WebResearchProviderId;
-  brainstormIdeas: BrainstormIdea[];
-  calendars: Zyklus[];
-  activeCalendarId: string | null;
-  zyklus: Zyklus | null;
-  productionGuide: ProductionGuide | null;
-  progressLog: ProgressEntry[];
-  recordedIds: string[];
-  learnings: LoopAnalysisResult | null;
-  planDiff: PlanDiffSummary | null;
-  planVersion: 1 | 2;
-}
-
 function ts() {
   return new Date().toISOString().slice(0, 16).replace("T", " ");
 }
@@ -102,7 +85,7 @@ function ts() {
 export function ContentFlowApp() {
   const [menu, setMenu] = useState<AppMenuId>("calendar");
   const [showSetup, setShowSetup] = useState(false);
-  const [phase, setPhase] = useState<Phase>("setup");
+  const [phase, setPhase] = useState<FlowPhase>("setup");
   const [nische, setNische] = useState("");
   const [referentCreator, setReferentCreator] = useState("");
   const [wizardStep, setWizardStep] = useState(0);
@@ -122,6 +105,7 @@ export function ContentFlowApp() {
   const [notionUrl, setNotionUrl] = useState<string | null>(null);
   const [notionPageId, setNotionPageId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingTask, setLoadingTask] = useState<LoadingTaskId>("generic");
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<VideoDetails | null>(null);
@@ -148,6 +132,44 @@ export function ContentFlowApp() {
   const [planImportLabel, setPlanImportLabel] = useState<string | null>(null);
   const [planV2Loading, setPlanV2Loading] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [activeAccountId, setActiveAccountId] = useState("");
+  const [accountList, setAccountList] = useState<AccountMeta[]>([]);
+
+  const flowSetters: FlowStateSetters = useMemo(
+    () => ({
+      setPhase,
+      setMenu,
+      setNische,
+      setReferentCreator,
+      setAnswers,
+      setCreatorSuggestion,
+      setBriefing,
+      setResearch,
+      setResearchCycle,
+      setResearchThemen,
+      setResearchWebProvider,
+      setBrainstormIdeas,
+      setCalendars,
+      setActiveCalendarId,
+      setProductionGuide,
+      setProgressLog,
+      setRecordedIds,
+      setLearnings,
+      setPlanDiff,
+      setPlanVersion,
+      setResearchFeedback,
+      setWizardStep,
+      setPerformance,
+      setLearningsMock,
+      setPlanImportLabel,
+      setSelectedVideo,
+      setNotionUrl,
+      setNotionPageId,
+      setError,
+      setShowSetup,
+    }),
+    []
+  );
 
   const zyklus = useMemo(() => {
     if (!calendars.length) return null;
@@ -159,6 +181,54 @@ export function ContentFlowApp() {
     }
     return calendars[calendars.length - 1];
   }, [calendars, activeCalendarId]);
+
+  const buildFlowSnapshot = useCallback((): PersistedFlow => {
+    return {
+      phase,
+      menu,
+      nische,
+      referentCreator,
+      answers,
+      creatorSuggestion,
+      briefing,
+      research,
+      researchCycle,
+      researchThemen,
+      researchWebProvider,
+      brainstormIdeas,
+      calendars,
+      activeCalendarId,
+      zyklus,
+      productionGuide,
+      progressLog,
+      recordedIds,
+      learnings,
+      planDiff,
+      planVersion,
+    };
+  }, [
+    phase,
+    menu,
+    nische,
+    referentCreator,
+    answers,
+    creatorSuggestion,
+    briefing,
+    research,
+    researchCycle,
+    researchThemen,
+    researchWebProvider,
+    brainstormIdeas,
+    calendars,
+    activeCalendarId,
+    zyklus,
+    productionGuide,
+    progressLog,
+    recordedIds,
+    learnings,
+    planDiff,
+    planVersion,
+  ]);
 
   const upsertCalendar = useCallback((next: Zyklus) => {
     setCalendars((prev) => {
@@ -194,109 +264,31 @@ export function ContentFlowApp() {
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const s = JSON.parse(raw) as Partial<PersistedFlow>;
-        if (s.phase) setPhase(s.phase);
-        if (s.menu) {
-          const m = s.menu as string;
-          if (m === "account") setMenu("calendar");
-          else if (
-            m === "calendar" ||
-            m === "todos" ||
-            m === "hitl" ||
-            m === "dashboard"
-          )
-            setMenu(m);
-        }
-        if (s.nische) setNische(s.nische);
-        if (s.referentCreator) setReferentCreator(s.referentCreator);
-        if (s.answers) setAnswers(s.answers);
-        if (s.creatorSuggestion) setCreatorSuggestion(s.creatorSuggestion);
-        if (s.briefing) setBriefing(s.briefing);
-        if (s.research) setResearch(s.research);
-        if (s.researchCycle) setResearchCycle(s.researchCycle);
-        if (s.researchThemen) setResearchThemen(s.researchThemen);
-        if (s.researchWebProvider) {
-          setResearchWebProvider(parseWebResearchProvider(s.researchWebProvider));
-        }
-        if (s.brainstormIdeas) setBrainstormIdeas(s.brainstormIdeas);
-        if (Array.isArray(s.calendars) && s.calendars.length > 0) {
-          setCalendars(s.calendars);
-          setActiveCalendarId(
-            s.activeCalendarId ?? s.calendars[s.calendars.length - 1]?.id ?? null
-          );
-        } else if (s.zyklus) {
-          setCalendars([s.zyklus]);
-          setActiveCalendarId(s.zyklus.id);
-        }
-        if (s.productionGuide) setProductionGuide(s.productionGuide);
-        if (s.progressLog) setProgressLog(s.progressLog);
-        if (s.recordedIds) setRecordedIds(s.recordedIds);
-        if (s.learnings) setLearnings(s.learnings);
-        if (s.planDiff) setPlanDiff(s.planDiff);
-        if (s.planVersion) setPlanVersion(s.planVersion);
-      }
+      const registry = ensureAccountsRegistry();
+      setActiveAccountId(registry.activeId);
+      setAccountList(registry.accounts);
+      const flow =
+        loadFlowForAccount(registry.activeId) ?? emptyPersistedFlow();
+      applyPersistedFlow(flow, flowSetters);
     } catch {
       /* beschädigter Stand wird ignoriert */
     }
     setHydrated(true);
-  }, []);
+  }, [flowSetters]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
-    if (!hydrated) return;
-    const snapshot: PersistedFlow = {
-      phase,
-      menu,
-      nische,
-      referentCreator,
-      answers,
-      creatorSuggestion,
-      briefing,
-      research,
-      researchCycle,
-      researchThemen,
-      researchWebProvider,
-      brainstormIdeas,
-      calendars,
-      activeCalendarId,
-      zyklus,
-      productionGuide,
-      progressLog,
-      recordedIds,
-      learnings,
-      planDiff,
-      planVersion,
-    };
+    if (!hydrated || !activeAccountId) return;
+    const snapshot = buildFlowSnapshot();
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+      saveFlowForAccount(activeAccountId, snapshot);
     } catch {
       /* Quota o. Ä. — Demo läuft trotzdem weiter */
     }
   }, [
     hydrated,
-    phase,
-    menu,
-    nische,
-    referentCreator,
-    answers,
-    creatorSuggestion,
-    briefing,
-    research,
-    researchCycle,
-    researchThemen,
-    researchWebProvider,
-    brainstormIdeas,
-    calendars,
-    activeCalendarId,
-    zyklus,
-    productionGuide,
-    progressLog,
-    recordedIds,
-    learnings,
-    planDiff,
-    planVersion,
+    activeAccountId,
+    buildFlowSnapshot,
   ]);
 
   const pushProgress = useCallback(
@@ -427,6 +419,7 @@ export function ContentFlowApp() {
   const importPerformance = useCallback(async () => {
     if (!zyklus) return;
     setLoading(true);
+    setLoadingTask("performance");
     setError(null);
     try {
       const demoPlatforms = [
@@ -561,6 +554,7 @@ export function ContentFlowApp() {
 
   const finishWizard = async () => {
     setLoading(true);
+    setLoadingTask("wizard");
     setError(null);
     try {
       const cr = await fetch("/api/onboarding/creator", {
@@ -595,6 +589,9 @@ export function ContentFlowApp() {
   const runResearch = async (feedback?: string, cycle?: number) => {
     if (!briefing) return;
     setLoading(true);
+    setLoadingTask(
+      feedback?.trim() && research ? "researchRefine" : "research"
+    );
     setError(null);
     const c = cycle ?? researchCycle;
     try {
@@ -607,6 +604,8 @@ export function ContentFlowApp() {
           cycle: c,
           focus: researchFocus,
           webProvider: researchWebProvider,
+          previousResearch:
+            feedback?.trim() && research ? research : undefined,
           brainstormIdeas: brainstormIdeas.filter(
             (i) => i.status === "freigegeben" || i.status === "entwurf"
           ),
@@ -646,6 +645,7 @@ export function ContentFlowApp() {
   const approveAndPlan = async () => {
     if (!briefing || !research) return;
     setLoading(true);
+    setLoadingTask("plan");
     pushProgress("Freigabe", "Research freigegeben — Planung startet");
     try {
       const res = await fetch("/api/onboarding/plan", {
@@ -688,6 +688,7 @@ export function ContentFlowApp() {
   const syncNotion = async () => {
     if (!briefing || !research || !zyklus) return;
     setLoading(true);
+    setLoadingTask("notion");
     try {
       const res = await fetch("/api/notion/sync", {
         method: "POST",
@@ -736,40 +737,65 @@ export function ContentFlowApp() {
     setShowSetup(false);
   };
 
-  const resetFlow = () => {
+  const switchAccount = useCallback(
+    (nextId: string) => {
+      if (!hydrated || !activeAccountId || nextId === activeAccountId) return;
+      try {
+        saveFlowForAccount(activeAccountId, buildFlowSnapshot());
+      } catch {
+        /* ignorieren */
+      }
+      const registry = setActiveAccountInRegistry(nextId);
+      setAccountList(registry.accounts);
+      setActiveAccountId(nextId);
+      const flow = loadFlowForAccount(nextId) ?? emptyPersistedFlow();
+      applyPersistedFlow(flow, flowSetters);
+    },
+    [hydrated, activeAccountId, buildFlowSnapshot, flowSetters]
+  );
+
+  const createAccount = useCallback(() => {
+    if (!hydrated || !activeAccountId) return;
     try {
-      localStorage.removeItem(STORAGE_KEY);
+      saveFlowForAccount(activeAccountId, buildFlowSnapshot());
     } catch {
       /* ignorieren */
     }
-    setPhase("setup");
+    const { registry, accountId } = createAccountRecord();
+    setAccountList(registry.accounts);
+    setActiveAccountId(accountId);
+    applyPersistedFlow(emptyPersistedFlow(), flowSetters);
     setMenu("calendar");
-    setNische("");
-    setReferentCreator("");
-    setWizardStep(0);
-    setAnswers(emptyAnswers);
-    setCreatorSuggestion(null);
-    setBriefing(null);
-    setResearch(null);
-    setResearchThemen([]);
-    setResearchCycle(1);
-    setResearchFeedback("");
-    setBrainstormIdeas([]);
-    setCalendars([]);
-    setActiveCalendarId(null);
-    setProductionGuide(null);
-    setProgressLog([]);
-    setPerformance([]);
-    setRecordedIds([]);
-    setLearnings(null);
-    setLearningsMock(false);
-    setPlanDiff(null);
-    setPlanVersion(1);
-    setSelectedVideo(null);
-    setNotionUrl(null);
-    setNotionPageId(null);
-    setError(null);
-    setShowSetup(false);
+  }, [hydrated, activeAccountId, buildFlowSnapshot, flowSetters]);
+
+  const renameAccount = useCallback((accountId: string, name: string) => {
+    const registry = renameAccountRecord(accountId, name);
+    setAccountList(registry.accounts);
+  }, []);
+
+  const deleteAccount = useCallback(
+    (accountId: string) => {
+      const registry = deleteAccountRecord(accountId);
+      if (!registry) return;
+      setAccountList(registry.accounts);
+      setActiveAccountId(registry.activeId);
+      const flow =
+        loadFlowForAccount(registry.activeId) ?? emptyPersistedFlow();
+      applyPersistedFlow(flow, flowSetters);
+    },
+    [flowSetters]
+  );
+
+  const resetFlow = () => {
+    if (!activeAccountId) return;
+    try {
+      removeFlowForAccount(activeAccountId);
+    } catch {
+      /* ignorieren */
+    }
+    applyPersistedFlow(emptyPersistedFlow(), flowSetters);
+    const registry = ensureAccountsRegistry();
+    setAccountList(registry.accounts);
   };
 
   const selectCalendar = useCallback((id: string) => {
@@ -796,6 +822,7 @@ export function ContentFlowApp() {
       return;
     }
     setLoading(true);
+    setLoadingTask("monthPlan");
     setError(null);
     try {
       const monat = nextFreeMonthYm(calendars, zyklus.monat);
@@ -855,8 +882,17 @@ export function ContentFlowApp() {
 
   const shellWide = menu === "dashboard";
 
+  const activeLoadingTask: LoadingTaskId = planV2Loading
+    ? "planV2"
+    : detailLoading
+      ? "script"
+      : loadingTask;
+
+  const showLoadingOverlay = loading || detailLoading || planV2Loading;
+
   return (
     <div className="min-h-screen bg-[var(--background)]">
+      {showLoadingOverlay && <LoadingIndicator taskId={activeLoadingTask} />}
       <div
         className={`flex flex-col lg:flex-row gap-10 mx-auto px-6 py-10 ${
           shellWide ? "max-w-[min(100%,1800px)]" : "max-w-7xl"
@@ -867,6 +903,17 @@ export function ContentFlowApp() {
           onChange={changeMenu}
           showOnboarding={Boolean(briefing || zyklus)}
           onOpenOnboarding={openSetup}
+          accounts={hydrated ? accountList : undefined}
+          activeAccountId={
+            hydrated && activeAccountId ? activeAccountId : undefined
+          }
+          onSwitchAccount={switchAccount}
+          onCreateAccount={createAccount}
+          onRenameAccount={renameAccount}
+          onDeleteAccount={deleteAccount}
+          onRefreshAccounts={() =>
+            setAccountList(ensureAccountsRegistry().accounts)
+          }
         />
 
         <div className="flex-1 min-w-0 relative min-h-[60vh] space-y-6">
@@ -1186,7 +1233,7 @@ export function ContentFlowApp() {
                       onClick={() => {
                         if (
                           confirm(
-                            "Alles zurücksetzen? Briefing, Research und Plan gehen verloren."
+                            "Diesen Account zurücksetzen? Briefing, Research und Plan gehen verloren."
                           )
                         ) {
                           resetFlow();

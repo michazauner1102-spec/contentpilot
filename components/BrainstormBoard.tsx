@@ -10,6 +10,7 @@ import {
   STATUS_STYLES,
   SUPERHOOK_COPY,
 } from "@/lib/brainstorm/contentPillars";
+import { LoadingIndicator } from "@/components/shell/LoadingIndicator";
 
 interface BrainstormBoardProps {
   briefing: ContentBriefing | null;
@@ -76,6 +77,9 @@ export function BrainstormBoard({
 
   return (
     <section className="space-y-4">
+      {loading && !externalLoading && (
+        <LoadingIndicator taskId="brainstorm" />
+      )}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold">Content Brainstorm</h2>

@@ -18,6 +18,7 @@ export async function POST(req: Request) {
       focus?: ResearchFocusId[];
       brainstormIdeas?: import("@/lib/brainstorm/contentPillars").BrainstormIdea[];
       webProvider?: string;
+      previousResearch?: import("@/lib/types").ResearchResult;
     };
     if (!body.briefing) {
       return NextResponse.json({ error: "briefing fehlt" }, { status: 400 });
@@ -31,7 +32,8 @@ export async function POST(req: Request) {
         cycle,
         body.focus,
         body.brainstormIdeas,
-        webProvider
+        webProvider,
+        body.previousResearch
       );
       const themen = buildThemenBlocks(research, body.briefing.praezisierteNische || body.briefing.nische);
       return NextResponse.json({ research, cycle, themen, webProvider });

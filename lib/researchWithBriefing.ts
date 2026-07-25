@@ -9,7 +9,8 @@ export async function researchWithBriefing(
   cycle = 1,
   focus?: string[],
   brainstormIdeas?: import("@/lib/brainstorm/contentPillars").BrainstormIdea[],
-  webProvider?: WebResearchProviderId
+  webProvider?: WebResearchProviderId,
+  previousResearch?: ResearchResult & { webResearchSource?: string }
 ): Promise<
   ResearchResult & {
     researchNotizen: string;
@@ -17,12 +18,6 @@ export async function researchWithBriefing(
     webResearchSource?: string;
   }
 > {
-  const base = await researchNische(
-    briefing.praezisierteNische || briefing.nische,
-    webProvider
-  );
-  const webResearchSource = base.webResearchSource;
-
   const focusNote = focus?.length
     ? `Fokus: ${focus.join(", ")}`
     : "Fokus: alle Bereiche";
@@ -36,7 +31,21 @@ export async function researchWithBriefing(
         .join("\n")}`
     : "";
 
-  if (!feedback?.trim()) {
+  const hasFeedback = Boolean(feedback?.trim());
+  const canRefineOnly = hasFeedback && previousResearch;
+
+  let base: ResearchResult & { webResearchSource?: string };
+  if (canRefineOnly) {
+    base = previousResearch!;
+  } else {
+    base = await researchNische(
+      briefing.praezisierteNische || briefing.nische,
+      webProvider
+    );
+  }
+  const webResearchSource = base.webResearchSource;
+
+  if (!hasFeedback) {
     return {
       ...base,
       researchNotizen: `Recherche-Zyklus ${cycle}. ${focusNote}${brainstormNote ? `\n${brainstormNote}` : ""}`,

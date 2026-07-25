@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { TrendDraftSuggestion } from "@/lib/trends/draftSuggestions";
 import type { WizardAnswerKey } from "@/lib/onboarding/wizardQuestions";
 import type { WebResearchProviderId } from "@/lib/research/webResearchProviders";
+import { LoadingIndicator } from "@/components/shell/LoadingIndicator";
 
 interface TrendSuggestionPanelProps {
   nische: string;
@@ -29,9 +30,11 @@ export function TrendSuggestionPanel({
   const [feedback, setFeedback] = useState("");
   const [source, setSource] = useState<string | null>(null);
   const [researchSnippet, setResearchSnippet] = useState("");
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const fetchDrafts = async (opts?: { feedback?: string; nextIteration?: number }) => {
     setLoading(true);
+    setFetchError(null);
     setOpen(true);
     try {
       const res = await fetch("/api/onboarding/suggest-trends", {
@@ -53,6 +56,10 @@ export function TrendSuggestionPanel({
       setResearchSnippet(data.researchSnippet ?? "");
       setSource(data.source ?? null);
       if (opts?.nextIteration) setIteration(opts.nextIteration);
+    } catch (e) {
+      setFetchError(
+        e instanceof Error ? e.message : "Trend-Vorschläge fehlgeschlagen"
+      );
     } finally {
       setLoading(false);
     }
@@ -73,7 +80,8 @@ export function TrendSuggestionPanel({
   );
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden relative">
+      {loading && <LoadingIndicator taskId="trends" />}
       <button
         type="button"
         className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left hover:bg-[var(--surface-elevated)]"
@@ -97,6 +105,9 @@ export function TrendSuggestionPanel({
 
       {open && (
         <div className="px-4 pb-4 space-y-3 border-t border-[var(--border)]">
+          {fetchError && (
+            <p className="text-xs text-red-400/90 pt-3">{fetchError}</p>
+          )}
           <div className="flex flex-wrap gap-2 pt-3">
             <button
               type="button"

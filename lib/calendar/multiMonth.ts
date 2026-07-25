@@ -1,5 +1,5 @@
 import type { VideoDetails, Zyklus } from "@/lib/types";
-import { buildZyklusId } from "@/lib/planGenerator";
+import { buildZyklusId } from "@/lib/plan/zyklusId";
 
 /** YYYY-MM + n Monate */
 export function addMonthsToYm(ym: string, months: number): string {

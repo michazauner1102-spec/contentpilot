@@ -2,13 +2,22 @@
 
 import type { AppMenuId } from "@/lib/ui/theme";
 import { ThemeToggle } from "@/components/shell/ThemeToggle";
+import { AccountSwitcher } from "@/components/shell/AccountSwitcher";
 import { APP_MENU } from "@/lib/ui/theme";
+import type { AccountMeta } from "@/lib/accounts/flowPersistence";
 
 interface AppSidebarProps {
   active: AppMenuId;
   onChange: (id: AppMenuId) => void;
   showOnboarding?: boolean;
   onOpenOnboarding?: () => void;
+  accounts?: AccountMeta[];
+  activeAccountId?: string;
+  onSwitchAccount?: (id: string) => void;
+  onCreateAccount?: () => void;
+  onRenameAccount?: (id: string, name: string) => void;
+  onDeleteAccount?: (id: string) => void;
+  onRefreshAccounts?: () => void;
 }
 
 export function AppSidebar({
@@ -16,6 +25,13 @@ export function AppSidebar({
   onChange,
   showOnboarding,
   onOpenOnboarding,
+  accounts,
+  activeAccountId,
+  onSwitchAccount,
+  onCreateAccount,
+  onRenameAccount,
+  onDeleteAccount,
+  onRefreshAccounts,
 }: AppSidebarProps) {
   return (
     <aside className="w-full lg:w-56 shrink-0 flex flex-col gap-6 lg:sticky lg:top-8 lg:self-start">
@@ -42,6 +58,22 @@ export function AppSidebar({
           </button>
         ))}
       </nav>
+      {accounts &&
+        activeAccountId &&
+        onSwitchAccount &&
+        onCreateAccount &&
+        onRenameAccount &&
+        onDeleteAccount && (
+          <AccountSwitcher
+            accounts={accounts}
+            activeId={activeAccountId}
+            onSwitch={onSwitchAccount}
+            onCreate={onCreateAccount}
+            onRename={onRenameAccount}
+            onDelete={onDeleteAccount}
+            onRefresh={onRefreshAccounts}
+          />
+        )}
       <div className="flex flex-col gap-2 lg:mt-auto">
         {showOnboarding && onOpenOnboarding && (
           <button

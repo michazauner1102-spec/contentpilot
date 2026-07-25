@@ -1,4 +1,4 @@
-export type LlmProviderId = "anthropic" | "gemini" | "openai";
+export type LlmProviderId = "anthropic" | "gemini" | "openai" | "claude-cli";
 
 import { forceMockOnly } from "@/lib/demo/mockOnly";
 
@@ -9,9 +9,14 @@ export interface LlmConfig {
 
 export function getLlmConfig(): LlmConfig {
   const provider = (process.env.LLM_PROVIDER ?? "anthropic").toLowerCase() as LlmProviderId;
-  if (provider !== "anthropic" && provider !== "gemini" && provider !== "openai") {
+  if (
+    provider !== "anthropic" &&
+    provider !== "gemini" &&
+    provider !== "openai" &&
+    provider !== "claude-cli"
+  ) {
     throw new Error(
-      `LLM_PROVIDER ungültig: ${provider}. Erlaubt: anthropic, gemini, openai`
+      `LLM_PROVIDER ungültig: ${provider}. Erlaubt: anthropic, gemini, openai, claude-cli`
     );
   }
 
@@ -19,6 +24,7 @@ export function getLlmConfig(): LlmConfig {
     anthropic: "claude-sonnet-4-20250514",
     gemini: "gemini-2.0-flash",
     openai: "gpt-4o-mini",
+    "claude-cli": "sonnet",
   };
 
   const model =
@@ -35,6 +41,9 @@ export function isLlmConfigured(): boolean {
   if (forceMockOnly()) return false;
   const { provider } = getLlmConfig();
   switch (provider) {
+    case "claude-cli":
+      // Nutzt die lokale, per Abo eingeloggte `claude` CLI — kein Key nötig.
+      return true;
     case "anthropic":
       return Boolean(process.env.ANTHROPIC_API_KEY?.trim());
     case "gemini":
