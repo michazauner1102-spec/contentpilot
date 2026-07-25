@@ -5,17 +5,24 @@
 </p>
 
 <p align="center">
+  <a href="https://claude.ai/code/artifact/d294f9a7-abf0-43ae-a6d3-5c976ca51c6b">Pitch Deck</a>
+  ·
+  <a href="docs/pitchdeck.md">Sprecher-Texte</a>
+  ·
+  <a href="mockups/">Gamma-Screenshots</a>
+</p>
+
+<p align="center">
+  <img src="docs/logo.png" alt="ContentPilot — 30-Tage Content, Plan, Dreh, Loop" width="640" />
+</p>
+
+<p align="center">
   <strong>ContentPilot</strong> — KI-gestützter <strong>30-Tage-Video-Plan</strong> mit Human-in-the-Loop, Kalender, Skripten und geschlossenem Loop zu <strong>Plan v2</strong>.
 </p>
 
 <p align="center">
   <a href="https://contentpilot-is89.onrender.com"><strong>Live-Demo</strong></a>
-  ·
-  <a href="https://claude.ai/code/artifact/d294f9a7-abf0-43ae-a6d3-5c976ca51c6b">Pitch Deck</a>
-  ·
-  <a href="docs/pitchdeck.md">Sprecher-Texte</a>
-  ·
-  Mock-Daten, keine Anmeldung
+  · Mock-Daten, keine Anmeldung
 </p>
 
 <p align="center">
