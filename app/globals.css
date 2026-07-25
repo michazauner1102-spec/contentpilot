@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0c0c0d;
+  --foreground: #e8e8ea;
+  --surface: #141416;
+  --surface-elevated: #1a1a1e;
+  --border: #2a2a30;
+  --muted: #9494a0;
+  --accent: #8b9aab;
+  --reichweite: #6d7f96;
+  --vertrauen: #6f8a7a;
+  --conversion: #9a8570;
+  --pillar-attention: #b87878;
+  --pillar-attention-bg: #221a1a;
+  --pillar-personal: #7a94b8;
+  --pillar-personal-bg: #1a1f28;
+  --pillar-value: #7a9a86;
+  --pillar-value-bg: #1a221e;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

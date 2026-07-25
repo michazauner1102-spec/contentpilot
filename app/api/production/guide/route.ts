@@ -1,0 +1,32 @@
+import { NextResponse } from "next/server";
+import { generateProductionGuide } from "@/lib/productionGuide";
+import { mockProductionGuide } from "@/lib/demo/flowMock";
+import type { ContentBriefing, VideoIdea } from "@/lib/types";
+
+export const maxDuration = 60;
+
+export async function POST(req: Request) {
+  try {
+    const body = (await req.json()) as {
+      briefing?: ContentBriefing;
+      ideas?: VideoIdea[];
+    };
+    if (!body.briefing || !body.ideas?.length) {
+      return NextResponse.json(
+        { error: "briefing und ideas erforderlich" },
+        { status: 400 }
+      );
+    }
+    try {
+      const guide = await generateProductionGuide(body.briefing, body.ideas);
+      return NextResponse.json({ guide });
+    } catch {
+      return NextResponse.json({ guide: mockProductionGuide(), mock: true });
+    }
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Produktions-Guide fehlgeschlagen" },
+      { status: 500 }
+    );
+  }
+}
