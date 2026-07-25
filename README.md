@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://claude.ai/code/artifact/d294f9a7-abf0-43ae-a6d3-5c976ca51c6b">
-    <img src="docs/pitch-deck-hero.svg" alt="ContentPilot Pitch Deck" width="680" />
+    <img src="docs/pitch-deck-hero.png" alt="ContentPilot Pitch Deck — Klicken öffnet das Claude Artifact" width="680" />
   </a>
 </p>
 
