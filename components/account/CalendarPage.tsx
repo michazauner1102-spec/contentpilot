@@ -5,11 +5,19 @@ import {
   DayDetailDrawer,
 } from "@/components/account/AccountView";
 import { PlanImportPanel } from "@/components/plan/PlanImportPanel";
+import { MonthCalendarSwitcher } from "@/components/calendar/MonthCalendarSwitcher";
+import { formatMonthLabel } from "@/lib/calendar/multiMonth";
 import type { ImportScheduleResult } from "@/lib/plan/importExternalSchedule";
 import type { VideoDetails, Zyklus } from "@/lib/types";
 
 interface CalendarPageProps {
   zyklus: Zyklus;
+  calendars: Zyklus[];
+  activeCalendarId: string | null;
+  onSelectCalendar: (id: string) => void;
+  onAddNextMonthClone: () => void;
+  onAddNextMonthGenerate?: () => void;
+  calendarActionLoading?: boolean;
   selectedVideo: VideoDetails | null;
   selectedDay?: number;
   onSelectVideo: (v: VideoDetails) => void;
@@ -27,6 +35,12 @@ interface CalendarPageProps {
 
 export function CalendarPage({
   zyklus,
+  calendars,
+  activeCalendarId,
+  onSelectCalendar,
+  onAddNextMonthClone,
+  onAddNextMonthGenerate,
+  calendarActionLoading,
   selectedVideo,
   selectedDay,
   onSelectVideo,
@@ -55,10 +69,20 @@ export function CalendarPage({
           )}
         </div>
         <p className="text-sm text-[var(--muted)] mt-1">
-          Tag anklicken — Thema, Skript und Vorschläge im Drawer. Oder geplante
-          Posts aus Buffer/Hootsuite hochladen.
+          {formatMonthLabel(zyklus.monat)} — Tag anklicken für Drawer & Skript.
+          Mehrere Monate unten anlegen oder wechseln.
         </p>
       </header>
+
+      <MonthCalendarSwitcher
+        calendars={calendars}
+        activeId={activeCalendarId}
+        onSelect={onSelectCalendar}
+        onAddClone={onAddNextMonthClone}
+        onAddGenerate={onAddNextMonthGenerate}
+        loading={calendarActionLoading}
+        canGenerate={Boolean(onAddNextMonthGenerate)}
+      />
 
       {onImportSchedule && (
         <PlanImportPanel

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   videoIdeaToMeta,
   type ContentBriefing,
@@ -31,6 +31,11 @@ import type { BereichGrouped, VideoWithInsights } from "@/lib/insights/types";
 import type { ImportScheduleResult } from "@/lib/plan/importExternalSchedule";
 import { buildZyklusId } from "@/lib/planGenerator";
 import { computePlanDiff, type PlanDiffSummary } from "@/lib/planDiff";
+import {
+  cloneZyklusForMonth,
+  formatMonthLabel,
+  nextFreeMonthYm,
+} from "@/lib/calendar/multiMonth";
 import { DEMO_DIFF } from "@/lib/demo/mockData";
 import { BTN_ACCENT, BTN_PRIMARY, BTN_SECONDARY, INPUT_FIELD, type AppMenuId } from "@/lib/ui/theme";
 import { AppSidebar } from "@/components/shell/AppSidebar";
@@ -73,6 +78,8 @@ interface PersistedFlow {
   researchCycle: number;
   researchThemen: ResearchThemenBlock[];
   brainstormIdeas: BrainstormIdea[];
+  calendars: Zyklus[];
+  activeCalendarId: string | null;
   zyklus: Zyklus | null;
   productionGuide: ProductionGuide | null;
   progressLog: ProgressEntry[];
@@ -102,7 +109,6 @@ export function ContentFlowApp() {
   >(null);
   const [researchCycle, setResearchCycle] = useState(1);
   const [researchFeedback, setResearchFeedback] = useState("");
-  const [zyklus, setZyklus] = useState<Zyklus | null>(null);
   const [productionGuide, setProductionGuide] = useState<ProductionGuide | null>(
     null
   );
@@ -120,6 +126,8 @@ export function ContentFlowApp() {
     []
   );
   const [brainstormIdeas, setBrainstormIdeas] = useState<BrainstormIdea[]>([]);
+  const [calendars, setCalendars] = useState<Zyklus[]>([]);
+  const [activeCalendarId, setActiveCalendarId] = useState<string | null>(null);
   const [performance, setPerformance] = useState<VideoWithInsights[]>([]);
   const [recordedIds, setRecordedIds] = useState<string[]>([]);
   const [learnings, setLearnings] = useState<LoopAnalysisResult | null>(null);
@@ -129,6 +137,42 @@ export function ContentFlowApp() {
   const [planImportLabel, setPlanImportLabel] = useState<string | null>(null);
   const [planV2Loading, setPlanV2Loading] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+
+  const zyklus = useMemo(() => {
+    if (!calendars.length) return null;
+    if (activeCalendarId) {
+      return (
+        calendars.find((c) => c.id === activeCalendarId) ??
+        calendars[calendars.length - 1]
+      );
+    }
+    return calendars[calendars.length - 1];
+  }, [calendars, activeCalendarId]);
+
+  const upsertCalendar = useCallback((next: Zyklus) => {
+    setCalendars((prev) => {
+      const i = prev.findIndex((c) => c.id === next.id);
+      if (i >= 0) {
+        const copy = [...prev];
+        copy[i] = next;
+        return copy;
+      }
+      return [...prev, next];
+    });
+    setActiveCalendarId(next.id);
+  }, []);
+
+  const patchActiveCalendar = useCallback(
+    (patch: (z: Zyklus) => Zyklus) => {
+      setCalendars((prev) => {
+        const activeId =
+          activeCalendarId ?? prev[prev.length - 1]?.id ?? null;
+        if (!activeId) return prev;
+        return prev.map((c) => (c.id === activeId ? patch(c) : c));
+      });
+    },
+    [activeCalendarId]
+  );
 
   const toggleRecorded = (id: string) =>
     setRecordedIds((ids) =>
@@ -163,7 +207,15 @@ export function ContentFlowApp() {
         if (s.researchCycle) setResearchCycle(s.researchCycle);
         if (s.researchThemen) setResearchThemen(s.researchThemen);
         if (s.brainstormIdeas) setBrainstormIdeas(s.brainstormIdeas);
-        if (s.zyklus) setZyklus(s.zyklus);
+        if (Array.isArray(s.calendars) && s.calendars.length > 0) {
+          setCalendars(s.calendars);
+          setActiveCalendarId(
+            s.activeCalendarId ?? s.calendars[s.calendars.length - 1]?.id ?? null
+          );
+        } else if (s.zyklus) {
+          setCalendars([s.zyklus]);
+          setActiveCalendarId(s.zyklus.id);
+        }
         if (s.productionGuide) setProductionGuide(s.productionGuide);
         if (s.progressLog) setProgressLog(s.progressLog);
         if (s.recordedIds) setRecordedIds(s.recordedIds);
@@ -192,6 +244,8 @@ export function ContentFlowApp() {
       researchCycle,
       researchThemen,
       brainstormIdeas,
+      calendars,
+      activeCalendarId,
       zyklus,
       productionGuide,
       progressLog,
@@ -218,6 +272,8 @@ export function ContentFlowApp() {
     researchCycle,
     researchThemen,
     brainstormIdeas,
+    calendars,
+    activeCalendarId,
     zyklus,
     productionGuide,
     progressLog,
@@ -247,13 +303,12 @@ export function ContentFlowApp() {
   );
 
   const patchPlanVideo = useCallback((updated: VideoDetails) => {
-    setZyklus((z) =>
-      z
-        ? { ...z, plan: z.plan.map((v) => (v.id === updated.id ? updated : v)) }
-        : z
-    );
+    patchActiveCalendar((z) => ({
+      ...z,
+      plan: z.plan.map((v) => (v.id === updated.id ? updated : v)),
+    }));
     setSelectedVideo((cur) => (cur?.id === updated.id ? updated : cur));
-  }, []);
+  }, [patchActiveCalendar]);
 
   const applyImportedSchedule = useCallback(
     (result: ImportScheduleResult) => {
@@ -277,7 +332,6 @@ export function ContentFlowApp() {
             plan: result.plan,
             bereichMix: result.bereichMix,
           };
-      setZyklus(nextZyklus);
       setPlanVersion(1);
       setPlanDiff(null);
       setPerformance([]);
@@ -293,12 +347,13 @@ export function ContentFlowApp() {
         unknown: "Import",
       };
       setPlanImportLabel(labels[result.source] ?? "Import");
+      upsertCalendar(nextZyklus);
       pushProgress(
         "Import",
         `${result.importedCount} Posts aus ${labels[result.source] ?? "Scheduling"} — Kalender ersetzt`
       );
     },
-    [briefing, zyklus, pushProgress]
+    [briefing, zyklus, pushProgress, upsertCalendar]
   );
 
   const loadVideoDetail = useCallback(
@@ -420,6 +475,7 @@ export function ContentFlowApp() {
       );
 
       const nische = briefing?.praezisierteNische || zyklus.nische;
+      const monat = nextFreeMonthYm(calendars, zyklus.monat);
       const planRes = await fetch("/api/plan/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -433,6 +489,7 @@ export function ContentFlowApp() {
           referenzen: creatorSuggestion?.referenzVideos ?? [],
           learnings: nextLearnings,
           version: 2,
+          monat,
         }),
       });
       const planData = await planRes.json();
@@ -444,20 +501,34 @@ export function ContentFlowApp() {
           ? computePlanDiff(zyklus.plan, v2Ideas)
           : { ...DEMO_DIFF, hookChanges: 0, formatChanges: 0 }
       );
-      setZyklus({ ...(planData.zyklus as Zyklus), learnings: nextLearnings });
+      const newZ: Zyklus = {
+        ...(planData.zyklus as Zyklus),
+        monat,
+        learnings: nextLearnings,
+      };
+      setCalendars((prev) => [...prev, newZ]);
+      setActiveCalendarId(newZ.id);
       setPlanVersion(2);
       setPlanImportLabel(null);
       // Neuer Zyklus: alte Auswahl, To-do-Haken und Metriken gehören zu Plan v1.
       setSelectedVideo(null);
       setRecordedIds([]);
       setPerformance([]);
-      pushProgress("Loop", "Plan v2 übernommen — Kalender & To-dos aktualisiert");
+      pushProgress("Loop", "Plan v2 als neuer Monats-Kalender angelegt");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Plan v2 fehlgeschlagen");
     } finally {
       setPlanV2Loading(false);
     }
-  }, [zyklus, performance, briefing, research, creatorSuggestion, pushProgress]);
+  }, [
+    zyklus,
+    calendars,
+    performance,
+    briefing,
+    research,
+    creatorSuggestion,
+    pushProgress,
+  ]);
 
   const currentQuestion = WIZARD_QUESTIONS[wizardStep];
   const currentKey = currentQuestion?.id as WizardAnswerKey | undefined;
@@ -562,7 +633,7 @@ export function ContentFlowApp() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setZyklus(data.zyklus);
+      upsertCalendar(data.zyklus);
       setPlanImportLabel(null);
       setPerformance([]);
       setSelectedVideo(null);
@@ -662,7 +733,8 @@ export function ContentFlowApp() {
     setResearchCycle(1);
     setResearchFeedback("");
     setBrainstormIdeas([]);
-    setZyklus(null);
+    setCalendars([]);
+    setActiveCalendarId(null);
     setProductionGuide(null);
     setProgressLog([]);
     setPerformance([]);
@@ -677,6 +749,74 @@ export function ContentFlowApp() {
     setError(null);
     setShowSetup(false);
   };
+
+  const selectCalendar = useCallback((id: string) => {
+    setActiveCalendarId(id);
+    setSelectedVideo(null);
+    setPerformance([]);
+    setRecordedIds([]);
+    setPlanImportLabel(null);
+  }, []);
+
+  const addNextMonthClone = useCallback(() => {
+    if (!zyklus) return;
+    const monat = nextFreeMonthYm(calendars, zyklus.monat);
+    const neu = cloneZyklusForMonth(zyklus, monat);
+    setCalendars((prev) => [...prev, neu]);
+    setActiveCalendarId(neu.id);
+    setSelectedVideo(null);
+    pushProgress("Kalender", `Monat ${formatMonthLabel(monat)} als Kopie angelegt`);
+  }, [zyklus, calendars, pushProgress]);
+
+  const addNextMonthGenerate = useCallback(async () => {
+    if (!zyklus || !briefing || !research) {
+      setError("Briefing und Research nötig für KI-Plan.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const monat = nextFreeMonthYm(calendars, zyklus.monat);
+      const nische = briefing.praezisierteNische || briefing.nische;
+      const planRes = await fetch("/api/plan/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nische,
+          research,
+          referenzen: creatorSuggestion?.referenzVideos ?? [],
+          learnings: learnings ?? undefined,
+          briefing,
+          monat,
+          version: 1,
+        }),
+      });
+      const planData = await planRes.json();
+      if (!planRes.ok) throw new Error(planData.error);
+      const newZ = planData.zyklus as Zyklus;
+      setCalendars((prev) => [...prev, newZ]);
+      setActiveCalendarId(newZ.id);
+      setSelectedVideo(null);
+      setPlanVersion(1);
+      setPlanImportLabel(null);
+      pushProgress(
+        "Kalender",
+        `KI-Plan für ${formatMonthLabel(monat)} erstellt`
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Monats-Plan fehlgeschlagen");
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    zyklus,
+    calendars,
+    briefing,
+    research,
+    creatorSuggestion,
+    learnings,
+    pushProgress,
+  ]);
 
   const planFertig = Boolean(zyklus);
 
@@ -718,6 +858,14 @@ export function ContentFlowApp() {
             (zyklus ? (
               <CalendarPage
                 zyklus={zyklus}
+                calendars={calendars}
+                activeCalendarId={activeCalendarId}
+                onSelectCalendar={selectCalendar}
+                onAddNextMonthClone={addNextMonthClone}
+                onAddNextMonthGenerate={
+                  briefing && research ? addNextMonthGenerate : undefined
+                }
+                calendarActionLoading={loading}
                 selectedVideo={selectedVideo}
                 selectedDay={selectedVideo?.postingDay}
                 onSelectVideo={selectVideo}

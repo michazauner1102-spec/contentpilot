@@ -70,7 +70,7 @@ flowchart LR
 
 1. **Plan-Setup** — Nische, 5 Fragen, Briefing, optional Trend-Research  
 2. **Human in the Loop** — Brainstorm-Board, Research, Plan freigeben  
-3. **Kalender** — 30 Tage; **Posts hochladen** (Buffer/Hootsuite CSV/JSON); Tag öffnen → Inhaltsvorschlag → Button → **Skript rechts**  
+3. **Kalender** — mehrere **Monats-Kalender** (Tabs); **+ Nächster Monat** (Kopie oder KI-Plan); Import Buffer/Hootsuite; Skript-Panel rechts  
 4. **Aufnahme-To-dos** — Wochen fürs Drehen, abhaken was fertig ist  
 5. **Dashboard** — KPIs, einklappbare Plattformen, Report pro Kanal  
 6. **Loop** — Learnings je Bereich, **Monats-Feedback-Dokument** (Markdown), Plan v2 im Kalender  

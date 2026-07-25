@@ -9,6 +9,7 @@ export async function POST(req: Request) {
   try {
     const body = (await req.json()) as PlanGenerateInput & {
       version?: number;
+      monat?: string;
     };
     if (!body.nische || !body.research || !body.referenzen) {
       return NextResponse.json(
@@ -17,12 +18,16 @@ export async function POST(req: Request) {
       );
     }
     const version = body.version === 2 ? 2 : 1;
+    const monat =
+      body.monat?.trim() && /^\d{4}-\d{2}$/.test(body.monat.trim())
+        ? body.monat.trim()
+        : new Date().toISOString().slice(0, 7);
     try {
       const { ideas, bereichMix } = await generatePlan(body);
       const zyklus = {
         id: buildZyklusId(body.nische, version),
         nische: body.nische,
-        monat: new Date().toISOString().slice(0, 7),
+        monat,
         plan: ideasToPlan(ideas),
         bereichMix,
       };
@@ -33,7 +38,7 @@ export async function POST(req: Request) {
         ...demo,
         id: buildZyklusId(body.nische, version),
         nische: body.nische,
-        monat: new Date().toISOString().slice(0, 7),
+        monat,
       };
       return NextResponse.json({
         ideas: zyklus.plan,
