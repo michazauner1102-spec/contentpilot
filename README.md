@@ -7,6 +7,11 @@
 </p>
 
 <p align="center">
+  <a href="https://contentpilot-is89.onrender.com"><strong>Live-Demo öffnen</strong></a>
+  · Mock-Daten · ohne Anmeldung
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js" alt="Next.js 16" />
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React 19" />
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
@@ -126,7 +131,7 @@ cp .env.local.example .env.local   # Keys eintragen (optional für Mocks)
 npm run dev
 ```
 
-Öffnen: **http://127.0.0.1:3000**
+Öffnen: **http://127.0.0.1:3000** (lokal) · **https://contentpilot-is89.onrender.com** (Live-Demo)
 
 | Befehl | Beschreibung |
 |--------|----------------|
@@ -189,13 +194,15 @@ Optional: `LLM_MODEL` setzen (sonst sinnvoller Default pro Provider).
 
 ## Live-Demo (öffentlich, Mock-Daten)
 
+**Jetzt testen:** [https://contentpilot-is89.onrender.com](https://contentpilot-is89.onrender.com)
+
 Deploy auf **Render** (Free Tier, Frankfurt) — ohne API-Keys lauffähig (`INSIGHTS_MODE=mock`, Demo-Banner).
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/michazauner1102-spec/contentpilot)
 
-1. Button klicken → Render-Account verbinden → **Apply**  
+1. Button klicken → Render-Account verbinden → **Apply** (eigene Instanz)  
 2. Optional: LLM-/Research-Keys später in Environment setzen  
-3. Nach dem Build: URL z. B. `https://contentpilot.onrender.com` (Name ggf. mit Suffix)
+3. Free Tier: nach Inaktivität Cold Start (~30–60 s beim ersten Aufruf)
 
 Lokal wie die Live-Demo: `INSIGHTS_MODE=mock` und `NEXT_PUBLIC_DEMO_MODE=true` in `.env.local`.
 
@@ -237,4 +244,4 @@ docs/                Banner, Screenshots für README
 ## Lizenz & Kontext
 
 Hackathon-Projekt **Social Media Stuttgart** — MVP zur Demonstration des Content-Loops.  
-Repository: [github.com/michazauner1102-spec/contentpilot](https://github.com/michazauner1102-spec/contentpilot)
+Repository: [github.com/michazauner1102-spec/contentpilot](https://github.com/michazauner1102-spec/contentpilot) · Live-Demo: [contentpilot-is89.onrender.com](https://contentpilot-is89.onrender.com)
