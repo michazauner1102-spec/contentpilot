@@ -1,283 +1,101 @@
 <p align="center">
   <a href="https://claude.ai/code/artifact/d294f9a7-abf0-43ae-a6d3-5c976ca51c6b">
-    <img src="docs/pitch-deck-hero.svg" alt="ContentPilot Pitch Deck — The AI Content Loop for Everyone (10 Slides)" width="720" />
+    <img src="docs/pitch-deck-hero.svg" alt="ContentPilot Pitch Deck" width="680" />
   </a>
 </p>
 
 <p align="center">
-  <a href="https://claude.ai/code/artifact/d294f9a7-abf0-43ae-a6d3-5c976ca51c6b"><strong>Pitch Deck öffnen</strong></a>
-  (Claude Artifact)
-  · <a href="docs/pitchdeck.md">Slide-Texte &amp; Demo-Script</a>
-  · <a href="mockups/">App-Screenshots für Gamma</a>
+  <strong>ContentPilot</strong> — KI-gestützter <strong>30-Tage-Video-Plan</strong> mit Human-in-the-Loop, Kalender, Skripten und geschlossenem Loop zu <strong>Plan v2</strong>.
 </p>
 
 <p align="center">
-  <img src="docs/logo.png" alt="ContentPilot — 30-Tage Content, Plan, Dreh, Loop" width="640" />
+  <a href="https://contentpilot-is89.onrender.com"><strong>Live-Demo</strong></a>
+  ·
+  <a href="https://claude.ai/code/artifact/d294f9a7-abf0-43ae-a6d3-5c976ca51c6b">Pitch Deck</a>
+  ·
+  <a href="docs/pitchdeck.md">Sprecher-Texte</a>
+  ·
+  Mock-Daten, keine Anmeldung
 </p>
 
 <p align="center">
-  <strong>ContentPilot</strong> — vom Briefing zum 30-Tage-Videoplan, mit Dreh-To-dos, Mock-Performance und geschlossenem Loop zu Plan v2.
-</p>
-
-<p align="center">
-  <a href="https://contentpilot-is89.onrender.com"><strong>Live-Demo öffnen</strong></a>
-  · Mock-Daten · ohne Anmeldung
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js" alt="Next.js 16" />
-  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React 19" />
+  <img src="https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js" alt="Next.js" />
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Hackathon-Social%20Media%20Stuttgart-8b9aab?style=flat-square" alt="Hackathon" />
+  <img src="https://img.shields.io/badge/Hackathon-Stuttgart-8b9aab?style=flat-square" alt="Hackathon" />
 </p>
 
 ---
 
-## Was ist ContentPilot?
+## Was es löst
 
-ContentPilot ist ein **MVP für Creator und Marketing-Teams**, die Social-Video **planbar** machen wollen: Nische schärfen, Research mit Human-in-the-Loop, **30 Tage** im Kalender, Aufnahme strukturieren, Ergebnisse simulieren und daraus den **nächsten Monatsplan** ableiten.
-
-> Demo-fähig auch **ohne API-Keys** — Performance, einzelne Skripte und Learnings nutzen Mock-Daten.
-
----
-
-## USPs — warum ContentPilot?
-
-| | Unique Selling Point |
-|---|---------------------|
-| **Plan statt Chaos** | Validierter **60 / 25 / 15**-Mix (Reichweite · Vertrauen · Conversion) über 30 Tage |
-| **Human in the Loop** | Brainstorm, Research und Freigabe — KI schlägt vor, **du entscheidest** |
-| **Ein Kalender, ein Truth** | Tag anklicken → Inhaltsvorschlag links, **Skript-Panel rechts**; Bildvorschläge & Dreh im Drawer |
-| **Produktion mitdenken** | Aufnahme-To-dos nach Dreh-Wochen, Checkliste, Fortschritt |
-| **Geschlossener Loop** | Dashboard → Metriken → Learnings → **Plan v2** + **Monats-Feedback** (Trends, Kommentare) |
-| **Skript aus Inhalt** | Pro Kalender-Tag: Inhaltsvorschlag → **Skript generieren** (Hook, Inhalt, CTA, Bildideen) |
-| **Scheduling-Import** | **Buffer / Hootsuite** CSV/JSON im **Kalender** oder HITL — ersetzt den Plan, danach Skript & Loop |
-| **Monatsvorschläge (HITL)** | Eigene Ideen für Plan v2 einreichen → **KI bewertet** → in den Kalender übernehmen |
-| **Export-ready** | Markdown, TXT, JSON, Notion (optional) |
-
----
-
-## Für wen?
-
-| Persona | Nutzen |
-|---------|--------|
-| **Solo-Creator / Handwerker** | Wenig Zeit, klare Tagesplanung und konkrete Dreh-Impulse |
-| **Social-Media-Manager** | Briefing, Research-Nachweise und Planversionen für Stakeholder |
-| **Agentur / Hackathon-Team** | End-to-end Story: Setup → Plan → KPI → Iteration in einer App |
-| **Product Demo** | Mock-Badges, Testdaten-Import, Plattform-Reports ohne Live-APIs |
-
----
-
-## So funktioniert der Flow
+| | |
+|---|---|
+| **Chaos** | Fester **30-Tage-Plan** mit Mix **60 / 25 / 15** (Reichweite · Vertrauen · Conversion) |
+| **Kontrolle** | **Human in the Loop** — Research, Brainstorm, Freigabe, eigene Monatsideen |
+| **Produktion** | Kalender + **Skript-Panel**, Dreh-To-dos, Buffer/Hootsuite-**Import** |
+| **Lernen** | Dashboard → Learnings → **Plan v2** (Demo auch **ohne API-Keys**) |
 
 ```mermaid
 flowchart LR
-  A[Plan-Setup] --> B[Human in the Loop]
-  B --> C[30-Tage-Kalender]
-  C --> D[Aufnahme-To-dos]
-  D --> E[Dashboard]
-  E --> F[Learnings & Feedback]
-  F --> G[Plan v2]
-  G --> C
+  Setup --> HITL --> Kalender --> Drehen --> Dashboard --> Planv2
+  Planv2 --> Kalender
 ```
 
-1. **Plan-Setup** — Nische, 5 Fragen, Briefing, optional Trend-Research  
-2. **Human in the Loop** — Brainstorm-Board, Research, Plan freigeben  
-3. **Kalender** — mehrere **Monats-Kalender** (Tabs); **+ Nächster Monat** (Kopie oder KI-Plan); Import Buffer/Hootsuite; Skript-Panel rechts  
-4. **Aufnahme-To-dos** — Wochen fürs Drehen, abhaken was fertig ist  
-5. **Dashboard** — KPIs, einklappbare Plattformen, Report pro Kanal  
-6. **Loop** — Learnings je Bereich, **Monats-Feedback-Dokument** (Markdown), Plan v2 im Kalender  
-
-**Pitch & Demo-Script:** [`docs/plattform-erklaeren.md`](docs/plattform-erklaeren.md) · **Pitch Deck (10 Slides):** [`docs/pitchdeck.md`](docs/pitchdeck.md)
-
-### Import aus Buffer / Hootsuite
-
-| Ort | Aktion |
-|-----|--------|
-| **Kalender** | Leiste **Posts hochladen** → CSV/JSON wählen (Import ersetzt Kalender-Einträge) |
-| **Human in the Loop** | Voller Import-Dialog inkl. Vorschau & Vorlagen |
-
-Erkannte CSV-Spalten u. a.: Buffer (`Text`, `Scheduled At`, `Channel`), Hootsuite (`Date`, `Time`, `Message`, `Social Network Profiles`). ContentPilot-JSON-Backups (`zyklus.plan`) werden ebenfalls unterstützt.
+**Menü:** Plan-Setup → HITL → Kalender → Aufnahme-To-dos → Dashboard → Loop
 
 ---
 
 ## Screenshots
 
-### 30-Tage-Kalender
+| Kalender & Skript | Dashboard & Loop | Human in the Loop |
+|:---:|:---:|:---:|
+| [<img src="docs/screenshots/01-kalender.png" width="280" alt="Kalender">](docs/screenshots/01-kalender.png) | [<img src="docs/screenshots/02-dashboard.png" width="280" alt="Dashboard">](docs/screenshots/02-dashboard.png) | [<img src="docs/screenshots/03-human-in-the-loop.png" width="280" alt="HITL">](docs/screenshots/03-human-in-the-loop.png) |
 
-Tag anklicken → **Inhaltsvorschlag**, Skript-Button, Hook/Inhalt/CTA im **rechten Skript-Panel** und Bildvorschläge im Drawer.
-
-<p align="center">
-  <img src="docs/screenshots/01-kalender.png" alt="Kalender mit 30-Tage-Plan" width="920" />
-</p>
-
-### Dashboard & Loop
-
-KPI-Leiste, **Feedback & Loop** (Learnings, Plan v2, Monats-Feedback). Plattformen einklappbar.
-
-<p align="center">
-  <img src="docs/screenshots/02-dashboard.png" alt="Dashboard mit KPIs und Plattform-Karussell" width="920" />
-</p>
-
-### Human in the Loop
-
-Research, Brainstorm und Freigabe — Setup jederzeit beenden, Menü bleibt nutzbar.
-
-<p align="center">
-  <img src="docs/screenshots/03-human-in-the-loop.png" alt="Human in the Loop Ansicht" width="920" />
-</p>
-
-### Aufnahme-To-dos
-
-Dreh-Wochen und Checkliste, Sprung zurück in den Kalender.
-
-<p align="center">
-  <img src="docs/screenshots/04-aufnahme-todos.png" alt="Aufnahme-To-dos nach Wochen" width="920" />
-</p>
-
-### Plan-Setup
-
-Wizard mit Schnellauswahl und Trend-Research — Vollbild-Overlay, nicht abgeschnitten.
-
-<p align="center">
-  <img src="docs/screenshots/05-plan-setup.png" alt="Plan-Setup Wizard" width="920" />
-</p>
-
-*Screenshots neu erzeugen:* `npm run dev` starten, dann `npm run screenshots`.
+Weitere Bilder: [`docs/screenshots/`](docs/screenshots/) · Gamma-HiDPI: [`mockups/`](mockups/)
 
 ---
 
-## Schnellstart
+## Lokal starten
 
 ```bash
 git clone https://github.com/michazauner1102-spec/contentpilot.git
-cd contentpilot
-npm install
-cp .env.local.example .env.local   # Keys eintragen (optional für Mocks)
-npm run dev
+cd contentpilot && npm install && npm run dev
 ```
 
-Öffnen: **http://localhost:3000** (lokal) · **https://contentpilot-is89.onrender.com** (Live-Demo)
+→ **http://localhost:3000** · hängt? → `npm run dev:clean`
 
-Falls **localhost** nicht lädt: einmal `npm run dev:clean` (löscht `.next`). Alten Prozess auf Port 3000 beenden (`lsof -i :3000`). Notfalls **http://127.0.0.1:3000** probieren.
-
-| Befehl | Beschreibung |
-|--------|----------------|
-| `npm run dev` | Entwicklungsserver |
-| `npm run build` | Production-Build |
-| `npm start` | Production (z. B. Render) |
-| `npm run screenshots` | README-Screenshots unter `docs/screenshots/` |
-| `npm run pitch-screenshots-hd` | HiDPI-Pitch-Mockups (2×) unter `mockups/` |
-| `npm run demo:video` | 2-Min-Plattform-Demo (Playwright, lokal `demo/video/`) |
-| `npm run verify:llm` | Live-Test von Brainstorm, Research, Trends (Dev-Server + `.env.local`) |
-
-### Demo-Video (lokal)
-
-Nach `npm run dev` in einem zweiten Terminal:
-
-```bash
-PLAYWRIGHT_BROWSERS_PATH=0 npm run demo:video
-```
-
-Ausgabe: `demo/video/contentpilot-demo-2min.webm` und `.mp4` (mit ffmpeg). Voiceover-Vorlage: [`demo/VOICEOVER.md`](demo/VOICEOVER.md).  
-Optional: `DEMO_VIDEO_MAX_SEC=130` · `DEMO_VIDEO_SCALE=2` für Länge und Schärfe.
+| Befehl | Zweck |
+|--------|--------|
+| `npm run build` | Production |
+| `npm run verify:llm` | KI-Pfade testen (`.env.local` + Dev-Server) |
+| `npm run demo:video` | 2-Min-Screencast ([`demo/VOICEOVER.md`](demo/VOICEOVER.md)) |
 
 ---
 
-## Umgebungsvariablen
+## Konfiguration (kurz)
 
-Siehe [`.env.local.example`](.env.local.example) und [`docs/SECURITY.md`](docs/SECURITY.md). **Keine Secrets im Repository** — `.env.local` niemals committen.
+| Modus | Setup |
+|--------|--------|
+| **Demo (Standard)** | `.env.local.example` kopieren — Mock, keine Keys nötig |
+| **Echte KI** | `FORCE_MOCK_ONLY=false` + **ein** LLM-Key (`LLM_PROVIDER` + Anthropic / Gemini / OpenAI) |
+| **Web-Research** | optional Firecrawl, Perplexity, Tavily — siehe [`.env.local.example`](.env.local.example) |
 
-**Öffentliche Demo:** `FORCE_MOCK_ONLY=true` + `INSIGHTS_MODE=mock` (siehe [`render.yaml`](render.yaml)).
-
-### LLM — **essentiell** für echte KI (genau **einer**)
-
-`FORCE_MOCK_ONLY` aus → **einen** Provider wählen und **nur den passenden** API-Key setzen:
-
-| Provider | `LLM_PROVIDER` | API-Key (nur dieser eine) |
-|----------|----------------|---------------------------|
-| **Anthropic Claude** (Default) | `anthropic` | `ANTHROPIC_API_KEY` |
-| **Google Gemini** | `gemini` | `GOOGLE_GENERATIVE_AI_API_KEY` oder `GEMINI_API_KEY` |
-| **OpenAI** | `openai` | `OPENAI_API_KEY` |
-
-Optional: `LLM_MODEL` (sonst Default pro Provider). Plan, Skripte, Research-Synthese und Trend-Vorschläge laufen über dieses eine LLM.
-
-### Research & Export — **optional**
-
-| Variable | Zweck |
-|----------|--------|
-| `RESEARCH_WEB_PROVIDER` | Firecrawl, Perplexity, Tavily, … in der UI (Default: `auto`) |
-| `TAVILY_API_KEY` / `PERPLEXITY_API_KEY` / `FIRECRAWL_API_KEY` | Live-Web-Snippets; **ohne Keys:** Fallback, LLM nutzt Allgemeinwissen |
-| Gemini/Claude **Research** in der UI | Derselbe Key wie dein LLM (`gemini` / `anthropic`) — kein zweites LLM |
-| `NOTION_TOKEN` + `NOTION_DATABASE_ID` | Notion-Sync |
-
-### Referenz-Videos & Metriken (optional)
-
-| Plattform | Referenzen | Metriken (Live-Vorbereitung) |
-|-----------|------------|------------------------------|
-| **YouTube** | `YOUTUBE_API_KEY` (Search) | `YOUTUBE_OAUTH_REFRESH_TOKEN` + `INSIGHTS_MODE=live` |
-| **Instagram / Meta** | `META_ACCESS_TOKEN` oder `INSTAGRAM_ACCESS_TOKEN` | `INSTAGRAM_BUSINESS_ACCOUNT_ID` |
-| **TikTok** | `TIKTOK_CLIENT_KEY` + `TIKTOK_CLIENT_SECRET` | `TIKTOK_ACCESS_TOKEN` |
-| **LinkedIn** | `LINKEDIN_ACCESS_TOKEN` | `LINKEDIN_ORGANIZATION_URN` |
-
-- `REFERENCE_PLATFORMS=youtube,instagram,tiktok,linkedin` — welche Quellen für Referenz-Recherche  
-- `INSIGHTS_MODE=mock` (Default) — plattformspezifische **Demo-Metriken** im Dashboard  
-- `INSIGHTS_MODE=live` — nutzt konfigurierte API-Keys, sonst Mock-Fallback  
+Details: [`docs/SECURITY.md`](docs/SECURITY.md) · Deploy: [`render.yaml`](render.yaml) · [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/michazauner1102-spec/contentpilot)
 
 ---
 
-## Live-Demo (öffentlich, Mock-Daten)
+## Dokumentation
 
-**Jetzt testen:** [https://contentpilot-is89.onrender.com](https://contentpilot-is89.onrender.com)
-
-Deploy auf **Render** (Free Tier, Frankfurt) — ohne API-Keys lauffähig (`INSIGHTS_MODE=mock`, Demo-Banner).
-
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/michazauner1102-spec/contentpilot)
-
-1. Button klicken → Render-Account verbinden → **Apply** (eigene Instanz)  
-2. Optional: **ein** LLM-Key für echte KI; Web-Research-Keys nur bei Bedarf  
-3. Free Tier: nach Inaktivität Cold Start (~30–60 s beim ersten Aufruf)
-
-Lokal wie die Live-Demo: `INSIGHTS_MODE=mock` und `NEXT_PUBLIC_DEMO_MODE=true` in `.env.local`.
+| Thema | Datei |
+|--------|--------|
+| Pitch & Q&A (~5 Min.) | [`docs/plattform-erklaeren.md`](docs/plattform-erklaeren.md) |
+| 10 Slides (Gamma) | [`docs/pitchdeck.md`](docs/pitchdeck.md) |
+| API-Keys & Demo-Sicherheit | [`docs/SECURITY.md`](docs/SECURITY.md) |
 
 ---
 
-## Deployment (Render)
-
-[`render.yaml`](render.yaml) liegt als Blueprint bereit:
-
-1. [Render Dashboard](https://dashboard.render.com) → **New** → **Blueprint**  
-2. Repo verbinden → Environment-Variablen setzen  
-3. Deploy → öffentliche URL (Free Tier: Cold Start möglich)
-
----
-
-## Projektstruktur
-
-```
-app/                 API Routes & App Router
-components/          Kalender, Dashboard, HITL, Shell
-lib/                 Typen, Plan-Generator, Insights, Feedback, LLM, Demo
-mockups/             HiDPI-Pitch-Screenshots (Gamma)
-demo/                Voiceover-Skript für Demo-Video (Video-Dateien lokal, gitignored)
-insights-module/     Performance-Kern (→ lib/insights/)
-docs/                Banner, Screenshots für README
-```
-
----
-
-## Insights, Feedback & Export
-
-- Performance-Demo: `InsightsService` / Mock-Import über `/api/performance/import`  
-- **Plan-Import:** `POST /api/plan/import` — Buffer/Hootsuite CSV oder JSON → Kalender  
-- **HITL Monatsvorschlag:** `POST /api/hitl/month-suggestion` — KI-Bewertung für Plan v2  
-- **Monats-Feedback:** `POST /api/loop/feedback-document` — Trends, Gut/Schwach, Vorschläge, Kommentar-Analyse  
-- Loop-Learnings: `/api/loop/analyze` → Plan v2 über `/api/plan/generate`  
-- Export: Markdown, Notizen, JSON, Zwischenablage; optional Notion  
-
----
-
-## Lizenz & Kontext
-
-Hackathon-Projekt **Social Media Stuttgart** — MVP zur Demonstration des Content-Loops.  
-Repository: [github.com/michazauner1102-spec/contentpilot](https://github.com/michazauner1102-spec/contentpilot) · Live-Demo: [contentpilot-is89.onrender.com](https://contentpilot-is89.onrender.com)
+<p align="center">
+  Hackathon <strong>Social Media Stuttgart</strong> ·
+  <a href="https://github.com/michazauner1102-spec/contentpilot">GitHub</a> ·
+  <a href="https://contentpilot-is89.onrender.com">Live-Demo</a>
+</p>
