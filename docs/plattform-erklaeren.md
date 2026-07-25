@@ -29,11 +29,11 @@ Du startest mit **Briefing und Research**, die KI schlägt **30 Videos** im Mix 
 
 1. **Ein Satz Kontext:** „Solo-Creator oder Team — ein Monat Social Video, strukturiert.“
 2. **Plan-Setup** (Account): Nische, kurzer Wizard → Briefing. Optional: „Trend-Research“ erwähnen.
-3. **Human in the Loop:** Brainstorm kurz zeigen → Research → **„Plan freigeben“**.  
-   Neu: **Vorschläge für den nächsten Monat** — Text eingeben → **KI bewertet** → nach Plan-Freigabe **„In Plan einbauen“**.
-4. **Kalender:** Einen Tag öffnen → Inhaltsvorschlag → **Skript erstellen** (Hook, Inhalt, CTA, Bildideen).
-5. **Aufnahme-To-dos:** Dreh-Wochen, Haken setzen — „Produktion ist mitgedacht.“
-6. **Dashboard:** KPIs, Plattformen einklappen → **Feedback & Loop** → Testdaten/Metriken → **Learnings** → **Monats-Feedback** (Markdown) → **Plan v2**.
+3. **Human in the Loop:** Brainstorm kurz zeigen → Research → **Plan freigeben** oder **CSV/JSON importieren** (Buffer/Hootsuite).  
+   **Monatsvorschläge:** Text → KI bewertet → **In Plan einbauen**.  
+4. **Kalender:** Optional **Datei hochladen** statt KI-Plan. Tag öffnen → Inhaltsvorschlag → Button → **Skript-Panel rechts** (Hook, Inhalt, CTA).  
+5. **Aufnahme-To-dos:** Dreh-Wochen, Haken setzen — „Produktion ist mitgedacht.“  
+6. **Dashboard:** KPIs, Plattformen einklappen → **Feedback & Loop** → Testdaten → **Learnings** → **Monats-Feedback** → **Plan v2**.
 
 **Tipp:** In der öffentlichen Demo läuft vieles mit **Mock-Daten** (Badge im UI) — das ist Absicht: Story ohne Live-APIs.
 
@@ -43,7 +43,7 @@ Du startest mit **Briefing und Research**, die KI schlägt **30 Videos** im Mix 
 
 | Menü | Ein Satz |
 |------|----------|
-| **Kalender** | Der Monatsplan — 30 Tage, Mix, Detail pro Tag |
+| **Kalender** | Monatsplan, **Import**, Tag-Detail + **Skript-Panel** |
 | **Aufnahme-To-dos** | Wann drehen, was abhaken |
 | **Human in the Loop** | KI + Mensch: Research, Freigabe, Monatsvorschläge |
 | **Dashboard** | Zahlen, Reports, Loop, Plan v2 |
@@ -60,6 +60,7 @@ Merksatz: **„Setup → HITL → Kalender → Drehen → Dashboard → Loop.“
 - **Produktion:** Skript, Shotlist, Grafikvorschläge, Wochenplan fürs Drehen.
 - **Geschlossener Loop:** Metriken + Kommentar-Analyse → **Monats-Feedback** → **Plan v2**.
 - **Demo-tauglich:** Mock-Performance, optional echte LLMs per API-Key.
+- **Buffer/Hootsuite:** Geplanten Content **importieren**, in ContentPilot **Skript & Loop** — posten weiterhin im Scheduling-Tool.
 
 ---
 
@@ -79,6 +80,9 @@ Nach dem Monat: Learnings aus Performance → neuer 30-Tage-Plan, inkl. Diff zum
 
 **Was machen die Monatsvorschläge in HITL?**  
 Du beschreibst eine Idee für den **nächsten Monat**; die KI bewertet Passung zum Briefing/Mix und kann den Slot im Kalender **ersetzen**.
+
+**Import aus Buffer/Hootsuite?**  
+CSV/JSON im **Kalender** (schnell) oder **HITL** (mit Vorschau) — ersetzt die Kalender-Slots; danach Skripte und Loop wie gewohnt.
 
 **Notion / Export?**  
 Markdown, TXT, JSON; Notion optional wenn konfiguriert.

@@ -34,7 +34,7 @@ ContentPilot ist ein **MVP für Creator und Marketing-Teams**, die Social-Video 
 |---|---------------------|
 | **Plan statt Chaos** | Validierter **60 / 25 / 15**-Mix (Reichweite · Vertrauen · Conversion) über 30 Tage |
 | **Human in the Loop** | Brainstorm, Research und Freigabe — KI schlägt vor, **du entscheidest** |
-| **Ein Kalender, ein Truth** | Tag anklicken → Thema, Hook, Skript, Grafik, Referenz im Drawer |
+| **Ein Kalender, ein Truth** | Tag anklicken → Inhaltsvorschlag links, **Skript-Panel rechts**; Bildvorschläge & Dreh im Drawer |
 | **Produktion mitdenken** | Aufnahme-To-dos nach Dreh-Wochen, Checkliste, Fortschritt |
 | **Geschlossener Loop** | Dashboard → Metriken → Learnings → **Plan v2** + **Monats-Feedback** (Trends, Kommentare) |
 | **Skript aus Inhalt** | Pro Kalender-Tag: Inhaltsvorschlag → **Skript generieren** (Hook, Inhalt, CTA, Bildideen) |
@@ -70,12 +70,21 @@ flowchart LR
 
 1. **Plan-Setup** — Nische, 5 Fragen, Briefing, optional Trend-Research  
 2. **Human in the Loop** — Brainstorm-Board, Research, Plan freigeben  
-3. **Kalender** — 30 Tage; **Posts hochladen** (Buffer/Hootsuite); Tag-Detail mit Skript, Bildvorschläge, Drehliste  
+3. **Kalender** — 30 Tage; **Posts hochladen** (Buffer/Hootsuite CSV/JSON); Tag öffnen → Inhaltsvorschlag → Button → **Skript rechts**  
 4. **Aufnahme-To-dos** — Wochen fürs Drehen, abhaken was fertig ist  
 5. **Dashboard** — KPIs, einklappbare Plattformen, Report pro Kanal  
 6. **Loop** — Learnings je Bereich, **Monats-Feedback-Dokument** (Markdown), Plan v2 im Kalender  
 
 **Pitch & Demo-Script:** [`docs/plattform-erklaeren.md`](docs/plattform-erklaeren.md)
+
+### Import aus Buffer / Hootsuite
+
+| Ort | Aktion |
+|-----|--------|
+| **Kalender** | Leiste **Posts hochladen** → CSV/JSON wählen (Import ersetzt Kalender-Einträge) |
+| **Human in the Loop** | Voller Import-Dialog inkl. Vorschau & Vorlagen |
+
+Erkannte CSV-Spalten u. a.: Buffer (`Text`, `Scheduled At`, `Channel`), Hootsuite (`Date`, `Time`, `Message`, `Social Network Profiles`). ContentPilot-JSON-Backups (`zyklus.plan`) werden ebenfalls unterstützt.
 
 ---
 
@@ -83,7 +92,7 @@ flowchart LR
 
 ### 30-Tage-Kalender
 
-Tag anklicken → **Inhaltsvorschlag**, Skript-Button, Hook/Inhalt/CTA und Bildvorschläge im Drawer.
+Tag anklicken → **Inhaltsvorschlag**, Skript-Button, Hook/Inhalt/CTA im **rechten Skript-Panel** und Bildvorschläge im Drawer.
 
 <p align="center">
   <img src="docs/screenshots/01-kalender.png" alt="Kalender mit 30-Tage-Plan" width="920" />

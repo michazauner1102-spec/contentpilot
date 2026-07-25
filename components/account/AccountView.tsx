@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, useEffect, type ReactNode } from "react";
 import type { ProductionGuide, VideoDetails } from "@/lib/types";
 import { BEREICH_LABELS } from "@/lib/types";
 import { BTN_PRIMARY, bereichDotClass, bereichMutedClass } from "@/lib/ui/theme";
@@ -221,6 +221,12 @@ export function DayDetailDrawer({
   onLoadDetail,
   loading,
 }: DayDetailDrawerProps) {
+  const [scriptPanelOpen, setScriptPanelOpen] = useState(false);
+
+  useEffect(() => {
+    setScriptPanelOpen(false);
+  }, [video?.id]);
+
   if (!video) return null;
 
   const hasScript = Boolean(video.skript?.hook?.trim());
@@ -228,17 +234,78 @@ export function DayDetailDrawer({
   const showGenerating = loading;
 
   const requestScript = () => {
-    onLoadDetail?.(video, { force: true });
+    setScriptPanelOpen(true);
+    if (!hasScript && !loading) {
+      onLoadDetail?.(video, { force: true });
+    }
+  };
+
+  const closeAll = () => {
+    setScriptPanelOpen(false);
+    onClose();
   };
 
   return (
     <div
       className="fixed inset-0 z-50 flex justify-end bg-black/40"
       role="dialog"
-      onClick={onClose}
+      aria-label={`Tag ${video.postingDay}: ${video.title}`}
+      onClick={closeAll}
     >
+      {scriptPanelOpen && (
+        <div
+          className="w-full max-w-lg h-full bg-[var(--background)] border-l border-[var(--border)] overflow-y-auto p-6 space-y-4 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex justify-between items-center gap-3">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--muted)]">
+              Skript
+            </h3>
+            <button
+              type="button"
+              onClick={() => setScriptPanelOpen(false)}
+              className="text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
+            >
+              Panel schließen
+            </button>
+          </div>
+
+          {showGenerating && (
+            <p className="text-sm text-[var(--muted)] animate-pulse">
+              {hasScript
+                ? "Skript wird aus dem Inhaltsvorschlag neu erstellt …"
+                : "Hook, Inhalt und CTA werden generiert …"}
+            </p>
+          )}
+
+          {hasScript && (
+            <div className="space-y-3">
+              <ScriptBlock label="Hook">{video.skript.hook}</ScriptBlock>
+              <ScriptBlock label="Inhalt">{video.skript.body}</ScriptBlock>
+              <ScriptBlock label="CTA">{video.skript.cta}</ScriptBlock>
+            </div>
+          )}
+
+          {!hasScript && !loading && (
+            <p className="text-sm text-[var(--muted)]">
+              Links auf den Button klicken, um das Skript zu erzeugen.
+            </p>
+          )}
+
+          {onLoadDetail && hasScript && !loading && (
+            <button
+              type="button"
+              className="text-xs text-[var(--muted)] underline hover:text-[var(--foreground)]"
+              onClick={() => onLoadDetail(video, { force: true })}
+            >
+              Skript neu generieren
+            </button>
+          )}
+        </div>
+      )}
+
       <div
-        className="w-full max-w-md h-full bg-[var(--surface)] border-l border-[var(--border)] overflow-y-auto p-6 space-y-6"
+        className="w-full max-w-md h-full bg-[var(--surface)] border-l border-[var(--border)] overflow-y-auto p-6 space-y-6 shrink-0"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-start gap-4">
@@ -252,7 +319,7 @@ export function DayDetailDrawer({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={closeAll}
             className="text-[var(--muted)] hover:text-[var(--foreground)] text-sm"
           >
             Schließen
@@ -276,35 +343,16 @@ export function DayDetailDrawer({
             >
               {loading
                 ? "Skript wird erstellt…"
-                : "Jetzt Skript erstellen basierend auf Inhaltsvorschlag"}
+                : scriptPanelOpen && hasScript
+                  ? "Skript-Panel ist rechts geöffnet"
+                  : hasScript
+                    ? "Skript rechts anzeigen"
+                    : "Jetzt Skript erstellen basierend auf Inhaltsvorschlag"}
             </button>
           )}
-        </section>
-
-        <section className="space-y-3">
-          <h3 className="text-xs uppercase tracking-wider text-[var(--muted)]">
-            Skript
-          </h3>
-          {showGenerating && !hasScript && (
-            <p className="text-sm text-[var(--muted)] animate-pulse">
-              Hook, Inhalt, CTA und Bildvorschläge …
-            </p>
-          )}
-          {loading && hasScript && (
-            <p className="text-sm text-[var(--muted)] animate-pulse">
-              Skript wird aus dem Inhaltsvorschlag neu erstellt …
-            </p>
-          )}
-          {hasScript && !loading && (
-            <div className="space-y-2">
-              <ScriptBlock label="Hook">{video.skript.hook}</ScriptBlock>
-              <ScriptBlock label="Inhalt">{video.skript.body}</ScriptBlock>
-              <ScriptBlock label="CTA">{video.skript.cta}</ScriptBlock>
-            </div>
-          )}
-          {!hasScript && !loading && (
+          {scriptPanelOpen && (
             <p className="text-xs text-[var(--muted)]">
-              Noch kein Skript — oben aus dem Inhaltsvorschlag generieren.
+              Hook, Inhalt und CTA erscheinen im Panel rechts daneben.
             </p>
           )}
         </section>
