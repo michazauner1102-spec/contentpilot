@@ -1,7 +1,6 @@
 # Mockups (Pitch-Deck, HiDPI 2×)
 
-Vollständige **Slide-Texte & Ablauf:** [`docs/pitchdeck.md`](../docs/pitchdeck.md) (10 Folien, Gamma).  
-Vorlage: [Claude Artifact — ContentPilot Pitch Deck](https://claude.ai/code/artifact/d294f9a7-abf0-43ae-a6d3-5c976ca51c6b)
+Pitch Deck: [Claude Artifact](https://claude.ai/code/artifact/d294f9a7-abf0-43ae-a6d3-5c976ca51c6b) · Bild-Zuordnung siehe Tabelle unten.
 
 | Pitch-Slide | Datei | Inhalt | Pixel |
 |-------------|--------|--------|-------|

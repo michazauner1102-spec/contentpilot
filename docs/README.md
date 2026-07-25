@@ -2,7 +2,6 @@
 
 | Datei | Inhalt |
 |--------|--------|
-| [pitchdeck.md](pitchdeck.md) | 10 Slides für Gamma + Mockup-Zuordnung |
 | [plattform-erklaeren.md](plattform-erklaeren.md) | Demo-Ablauf, USPs, Q&A |
 | [SECURITY.md](SECURITY.md) | Mock-Demo vs. private Keys |
 | [screenshots/](screenshots/) | README-Screenshots |
