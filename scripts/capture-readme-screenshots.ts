@@ -1,15 +1,19 @@
 /**
- * Erzeugt README-Screenshots (Dev-Server muss laufen: npm run dev).
- * Usage: npx tsx scripts/capture-readme-screenshots.ts
+ * Erzeugt README-Screenshots (Dev-Server: npm run dev).
+ * PLAYWRIGHT_BROWSERS_PATH=0 npm run screenshots
  */
 import { chromium } from "playwright";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import {
+  buildDemoPerformance,
   buildDemoZyklus,
+  DEMO_LEARNINGS,
   DEMO_NISCHE,
   DEMO_RESEARCH,
 } from "../lib/demo/mockData";
+import { computePlanDiff } from "../lib/planDiff";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const outDir = path.join(__dirname, "../docs/screenshots");
@@ -25,6 +29,7 @@ const emptyAnswers = {
 };
 
 function demoSnapshot(menu: string, extra: Record<string, unknown> = {}) {
+  const v1 = buildDemoZyklus(1);
   return {
     phase: "done",
     menu,
@@ -40,8 +45,10 @@ function demoSnapshot(menu: string, extra: Record<string, unknown> = {}) {
       referenzVideos: [],
     },
     briefing: {
+      nische: DEMO_NISCHE,
       praezisierteNische: DEMO_NISCHE,
       referentCreator: "Max Mustermann",
+      answers: emptyAnswers,
       contentVision:
         "30 Tage sichtbar werden: Reichweite, Vertrauen, Conversion im Mix.",
       tonality: DEMO_RESEARCH.tonality,
@@ -50,13 +57,14 @@ function demoSnapshot(menu: string, extra: Record<string, unknown> = {}) {
     researchCycle: 1,
     researchThemen: [],
     brainstormIdeas: [],
-    zyklus: buildDemoZyklus(1),
+    zyklus: v1,
     productionGuide: null,
     progressLog: [],
     recordedIds: [],
     learnings: null,
     planDiff: null,
     planVersion: 1,
+    performance: [] as unknown[],
     ...extra,
   };
 }
@@ -71,7 +79,7 @@ async function seedAndReload(
     { key: STORAGE_KEY, data: snapshot }
   );
   await page.reload({ waitUntil: "networkidle" });
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(800);
 }
 
 async function shot(page: import("playwright").Page, name: string) {
@@ -83,21 +91,46 @@ async function shot(page: import("playwright").Page, name: string) {
 }
 
 async function clickNav(page: import("playwright").Page, label: string) {
-  await page.getByRole("button", { name: new RegExp(label, "i") }).click();
-  await page.waitForTimeout(500);
+  await page.getByRole("button", { name: new RegExp(label, "i") }).first().click();
+  await page.waitForTimeout(700);
 }
 
 async function main() {
+  fs.mkdirSync(outDir, { recursive: true });
+
   const browser = await chromium.launch();
   const page = await browser.newPage({
     viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 2,
   });
 
-  await seedAndReload(page, demoSnapshot("calendar"));
-  await shot(page, "01-kalender.png");
+  const v1 = buildDemoZyklus(1);
+  const v2 = buildDemoZyklus(2);
+  const perf = buildDemoPerformance(v1);
+  const diff = computePlanDiff(v1.plan, v2.plan);
 
-  await clickNav(page, "Dashboard");
+  // Kalender mit Tag-Detail (Inhaltsvorschlag + Skript)
+  await seedAndReload(page, demoSnapshot("calendar", { zyklus: v1 }));
+  await page.getByRole("button", { name: /Reichweite-Hook Tag 10/i }).click();
+  await page.waitForTimeout(900);
+  await shot(page, "01-kalender.png");
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(400);
+
+  // Dashboard: KPIs + Feedback & Loop (Plan v2)
+  await seedAndReload(
+    page,
+    demoSnapshot("dashboard", {
+      zyklus: v2,
+      planVersion: 2,
+      performance: perf,
+      learnings: DEMO_LEARNINGS,
+      learningsMock: true,
+      planDiff: diff,
+    })
+  );
+  await page.getByText("Feedback & Loop").first().scrollIntoViewIfNeeded();
+  await page.waitForTimeout(600);
   await shot(page, "02-dashboard.png");
 
   await clickNav(page, "Human in the Loop");
@@ -106,12 +139,9 @@ async function main() {
   await clickNav(page, "Aufnahme-To-dos");
   await shot(page, "04-aufnahme-todos.png");
 
-  await seedAndReload(
-    page,
-    demoSnapshot("calendar", { showSetup: undefined })
-  );
+  await seedAndReload(page, demoSnapshot("calendar", { zyklus: v1 }));
   await page.getByRole("button", { name: /Plan-Setup öffnen/i }).click();
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(700);
   await shot(page, "05-plan-setup.png");
 
   await browser.close();

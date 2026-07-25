@@ -79,7 +79,7 @@ flowchart LR
 
 ### 30-Tage-Kalender
 
-Tag anklicken öffnet Skript und Vorschläge im Seiten-Drawer.
+Tag anklicken → **Inhaltsvorschlag**, Skript-Button, Hook/Inhalt/CTA und Bildvorschläge im Drawer.
 
 <p align="center">
   <img src="docs/screenshots/01-kalender.png" alt="Kalender mit 30-Tage-Plan" width="920" />
@@ -87,7 +87,7 @@ Tag anklicken öffnet Skript und Vorschläge im Seiten-Drawer.
 
 ### Dashboard & Loop
 
-KPI-Leiste, scrollbares Plattform-Karussell (ohne sichtbare Scrollbar), Klick → **Großansicht Report**.
+KPI-Leiste, **Feedback & Loop** (Learnings, Plan v2, Monats-Feedback). Plattformen einklappbar.
 
 <p align="center">
   <img src="docs/screenshots/02-dashboard.png" alt="Dashboard mit KPIs und Plattform-Karussell" width="920" />

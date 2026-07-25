@@ -7,6 +7,7 @@ import { chromium } from "playwright";
 import path from "path";
 import { fileURLToPath } from "url";
 import {
+  buildDemoPerformance,
   buildDemoZyklus,
   DEMO_LEARNINGS,
   DEMO_NISCHE,
@@ -105,9 +106,9 @@ async function main() {
   await page.reload({ waitUntil: "networkidle" });
   await page.getByRole("button", { name: /Plan-Setup starten/i }).click();
   await page.waitForTimeout(500);
-  await page.locator('input[placeholder*="Handwerker"]').fill(DEMO_NISCHE);
-  await page.locator('input[placeholder*="Creator"]').fill("Max Handwerk");
-  await page.getByRole("button", { name: /Weiter zu 5 Fragen/i }).click();
+  await page.locator("#setup-nische").fill(DEMO_NISCHE);
+  await page.locator("#setup-referent").fill("Max Handwerk");
+  await page.getByRole("button", { name: /Weiter — 5 kurze Fragen/i }).click();
   await page.waitForTimeout(500);
   const select = page.locator("select").first();
   if (await select.isVisible()) {
@@ -117,7 +118,7 @@ async function main() {
   await page.waitForTimeout(400);
   await shotFullPage(page, "01-planungsformular-fragen-2x.png");
 
-  // 2 — Kalender: Tag anklicken (Drawer mit Skript)
+  // 2 — Kalender: Tag-Detail mit Inhaltsvorschlag & Skript
   const v1 = buildDemoZyklus(1);
   await inject(
     page,
@@ -151,6 +152,7 @@ async function main() {
       planVersion: 2,
       learnings: DEMO_LEARNINGS,
       planDiff: diff,
+      performance: buildDemoPerformance(v1),
       briefing: {
         nische: DEMO_NISCHE,
         referentCreator: "Max Handwerk",
