@@ -2,6 +2,15 @@
   "name": "contentpilot",
   "version": "0.1.0",
   "private": true,
+  "description": "30-Tage Social-Video-Plan mit Human-in-the-Loop, Kalender, Metriken, Monats-Feedback und Plan v2 (Hackathon Stuttgart).",
+  "homepage": "https://contentpilot-is89.onrender.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/michazauner1102-spec/contentpilot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/michazauner1102-spec/contentpilot/issues"
+  },
   "scripts": {
     "dev": "next dev -H 127.0.0.1 -p 3000",
     "dev:clean": "rm -rf .next && next dev -H 127.0.0.1 -p 3000",
