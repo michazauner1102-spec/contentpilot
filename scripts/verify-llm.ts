@@ -36,7 +36,7 @@ function loadEnvLocal() {
 
 loadEnvLocal();
 
-const baseUrl = process.env.VERIFY_BASE_URL ?? "http://127.0.0.1:3000";
+const baseUrl = process.env.VERIFY_BASE_URL ?? "http://localhost:3000";
 
 async function getJson(pathname: string, init?: RequestInit) {
   const res = await fetch(`${baseUrl}${pathname}`, init);

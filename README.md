@@ -144,7 +144,9 @@ cp .env.local.example .env.local   # Keys eintragen (optional für Mocks)
 npm run dev
 ```
 
-Öffnen: **http://127.0.0.1:3000** (lokal) · **https://contentpilot-is89.onrender.com** (Live-Demo)
+Öffnen: **http://localhost:3000** (lokal) · **https://contentpilot-is89.onrender.com** (Live-Demo)
+
+Falls **localhost** nicht lädt: einmal `npm run dev:clean` (löscht `.next`). Alten Prozess auf Port 3000 beenden (`lsof -i :3000`). Notfalls **http://127.0.0.1:3000** probieren.
 
 | Befehl | Beschreibung |
 |--------|----------------|
