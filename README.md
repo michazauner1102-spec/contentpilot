@@ -1,4 +1,17 @@
 <p align="center">
+  <a href="https://claude.ai/code/artifact/d294f9a7-abf0-43ae-a6d3-5c976ca51c6b">
+    <img src="docs/pitch-deck-hero.svg" alt="ContentPilot Pitch Deck — The AI Content Loop for Everyone (10 Slides)" width="720" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://claude.ai/code/artifact/d294f9a7-abf0-43ae-a6d3-5c976ca51c6b"><strong>Pitch Deck öffnen</strong></a>
+  (Claude Artifact)
+  · <a href="docs/pitchdeck.md">Slide-Texte &amp; Demo-Script</a>
+  · <a href="mockups/">App-Screenshots für Gamma</a>
+</p>
+
+<p align="center">
   <img src="docs/logo.png" alt="ContentPilot — 30-Tage Content, Plan, Dreh, Loop" width="640" />
 </p>
 
