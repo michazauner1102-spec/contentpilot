@@ -1,17 +1,4 @@
 <p align="center">
-  <a href="https://claude.ai/code/artifact/d294f9a7-abf0-43ae-a6d3-5c976ca51c6b">
-    <img src="docs/pitch-deck-hero.png" alt="ContentPilot Pitch Deck — Klicken öffnet das Claude Artifact" width="680" />
-  </a>
-</p>
-
-<p align="center">
-  <a href="https://claude.ai/code/artifact/d294f9a7-abf0-43ae-a6d3-5c976ca51c6b"><strong>Pitch Deck</strong></a>
-  (Claude Artifact)
-  ·
-  <a href="mockups/">Screenshots für Gamma</a>
-</p>
-
-<p align="center">
   <img src="docs/logo.png" alt="ContentPilot — 30-Tage Content, Plan, Dreh, Loop" width="640" />
 </p>
 
@@ -22,6 +9,8 @@
 <p align="center">
   <a href="https://contentpilot-is89.onrender.com"><strong>Live-Demo öffnen</strong></a>
   · Mock-Daten · ohne Anmeldung
+  · <a href="https://claude.ai/code/artifact/d294f9a7-abf0-43ae-a6d3-5c976ca51c6b">Pitch Deck</a>
+  · <a href="mockups/">Gamma-Screenshots</a>
 </p>
 
 <p align="center">

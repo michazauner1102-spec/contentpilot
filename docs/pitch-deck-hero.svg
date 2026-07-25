@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-label="ContentPilot Pitch Deck">
-  <rect width="1200" height="420" fill="#dfded7"/>
-  <rect x="1" y="1" width="1198" height="418" fill="none" stroke="#b8b7af" stroke-width="2" rx="12"/>
-  <text x="600" y="175" text-anchor="middle" fill="#2f2e2a" font-family="system-ui,-apple-system,sans-serif" font-size="72" font-weight="700" letter-spacing="0.06em">CONTENTPILOT</text>
-  <text x="600" y="235" text-anchor="middle" fill="#63625e" font-family="system-ui,-apple-system,sans-serif" font-size="26" font-weight="400">The AI Content Loop for Everyone.</text>
-  <rect x="420" y="280" width="360" height="44" rx="22" fill="#cac9c1" stroke="#b8b7af"/>
-  <text x="600" y="308" text-anchor="middle" fill="#3a3936" font-family="system-ui,sans-serif" font-size="15" font-weight="600">10 Slides · Pitch Deck · Klicken zum Öffnen</text>
-  <text x="600" y="365" text-anchor="middle" fill="#63625e" font-family="system-ui,sans-serif" font-size="14">Plan ? Research ? Produktion ? Loop ? Plan v2</text>
-</svg>
