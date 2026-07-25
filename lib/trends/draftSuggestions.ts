@@ -1,4 +1,5 @@
 import { isLlmConfigured, callClaudeJSON } from "@/lib/llm";
+import { liveAiEnabled } from "@/lib/demo/liveAi";
 import {
   parseWebResearchProvider,
   runWebResearchWithProvider,
@@ -144,7 +145,8 @@ ${researchSnippet}`,
       researchSnippet,
       source: `${web.source}+claude`,
     };
-  } catch {
+  } catch (err) {
+    if (liveAiEnabled()) throw err;
     return {
       suggestions: mockDrafts(
         input.questionId,

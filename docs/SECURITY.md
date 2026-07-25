@@ -13,8 +13,8 @@ Wenn du jemals aus Versehen einen Key committed hast: Key beim Anbieter **sofort
 
 Die Demo unter [contentpilot-is89.onrender.com](https://contentpilot-is89.onrender.com) nutzt:
 
-- `NEXT_PUBLIC_DEMO_MODE=true`
-- `FORCE_MOCK_ONLY=true`
+- `NEXT_PUBLIC_DEMO_MODE=true` — UI-Hinweis „Demo“ (blockiert **keine** Server-APIs)
+- `FORCE_MOCK_ONLY=true` — **blockiert** LLM, Research, Notion, Plattform-APIs (öffentliche Demo)
 - `INSIGHTS_MODE=mock`
 
 Damit ruft der Server **keine** LLM-, Research-, Notion- oder Plattform-APIs auf — auch wenn jemand Keys im Hosting setzen würde. Es laufen Mock-Daten und Heuristiken.

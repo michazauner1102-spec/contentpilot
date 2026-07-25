@@ -154,6 +154,7 @@ npm run dev
 | `npm run screenshots` | README-Screenshots unter `docs/screenshots/` |
 | `npm run pitch-screenshots-hd` | HiDPI-Pitch-Mockups (2×) unter `mockups/` |
 | `npm run demo:video` | 2-Min-Plattform-Demo (Playwright, lokal `demo/video/`) |
+| `npm run verify:llm` | Live-Test von Brainstorm, Research, Trends (Dev-Server + `.env.local`) |
 
 ### Demo-Video (lokal)
 

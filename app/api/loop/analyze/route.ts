@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { analyzeLoop } from "@/lib/loopAnalysis";
 import { DEMO_LEARNINGS } from "@/lib/demo/mockData";
+import { aiRouteFailure } from "@/lib/demo/apiFallback";
 import type { BereichGrouped } from "@/lib/insights/types";
 
 export const maxDuration = 120;
@@ -21,8 +22,10 @@ export async function POST(req: Request) {
     try {
       const learnings = await analyzeLoop(grouped);
       return NextResponse.json({ learnings });
-    } catch {
-      return NextResponse.json({ learnings: DEMO_LEARNINGS, mock: true });
+    } catch (err) {
+      return aiRouteFailure(err, "Loop-Analyse fehlgeschlagen", {
+        learnings: DEMO_LEARNINGS,
+      });
     }
   } catch (e) {
     const message = e instanceof Error ? e.message : "Loop-Analyse fehlgeschlagen";

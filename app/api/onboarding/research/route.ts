@@ -3,6 +3,7 @@ import { researchWithBriefing } from "@/lib/researchWithBriefing";
 import { buildThemenBlocks } from "@/lib/research/themenBlocks";
 import { parseWebResearchProvider } from "@/lib/research/webResearchProviders";
 import { mockResearch } from "@/lib/demo/flowMock";
+import { aiRouteFailure } from "@/lib/demo/apiFallback";
 import type { ContentBriefing } from "@/lib/types";
 import type { ResearchFocusId } from "@/lib/research/themenBlocks";
 
@@ -34,14 +35,16 @@ export async function POST(req: Request) {
       );
       const themen = buildThemenBlocks(research, body.briefing.praezisierteNische || body.briefing.nische);
       return NextResponse.json({ research, cycle, themen, webProvider });
-    } catch {
+    } catch (err) {
       const research = mockResearch(cycle);
-      const themen = buildThemenBlocks(research, body.briefing!.praezisierteNische || body.briefing!.nische);
-      return NextResponse.json({
+      const themen = buildThemenBlocks(
+        research,
+        body.briefing!.praezisierteNische || body.briefing!.nische
+      );
+      return aiRouteFailure(err, "Research fehlgeschlagen", {
         research,
         cycle,
         themen,
-        mock: true,
       });
     }
   } catch (e) {

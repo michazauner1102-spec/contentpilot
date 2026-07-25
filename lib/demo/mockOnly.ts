@@ -1,10 +1,7 @@
 /**
- * Öffentliche Demo / GitHub-Klon: keine externen APIs, auch wenn Keys im Host gesetzt wären.
- * Aktiv bei NEXT_PUBLIC_DEMO_MODE oder FORCE_MOCK_ONLY=true.
+ * Server blockiert externe APIs nur bei FORCE_MOCK_ONLY (öffentliche Demo).
+ * NEXT_PUBLIC_DEMO_MODE steuert nur das UI-Banner — nicht den LLM-Betrieb.
  */
 export function forceMockOnly(): boolean {
-  return (
-    process.env.FORCE_MOCK_ONLY === "true" ||
-    process.env.NEXT_PUBLIC_DEMO_MODE === "true"
-  );
+  return process.env.FORCE_MOCK_ONLY === "true";
 }

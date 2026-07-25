@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { buildZyklusId, generatePlan } from "@/lib/planGenerator";
 import { buildDemoZyklus } from "@/lib/demo/mockData";
+import { aiRouteFailure } from "@/lib/demo/apiFallback";
 import { ideasToPlan, type PlanGenerateInput } from "@/lib/types";
 
 export const maxDuration = 120;
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
         bereichMix,
       };
       return NextResponse.json({ ideas, bereichMix, zyklus });
-    } catch {
+    } catch (err) {
       const demo = buildDemoZyklus(version);
       const zyklus = {
         ...demo,
@@ -40,11 +41,10 @@ export async function POST(req: Request) {
         nische: body.nische,
         monat,
       };
-      return NextResponse.json({
+      return aiRouteFailure(err, "Plan-Generierung fehlgeschlagen", {
         ideas: zyklus.plan,
         bereichMix: zyklus.bereichMix,
         zyklus,
-        mock: true,
       });
     }
   } catch (e) {

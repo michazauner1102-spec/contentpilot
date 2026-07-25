@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { suggestCreatorReference } from "@/lib/onboarding/briefing";
 import { mockCreatorSuggestion } from "@/lib/demo/flowMock";
+import { aiRouteFailure } from "@/lib/demo/apiFallback";
 
 export const maxDuration = 60;
 
@@ -22,10 +23,9 @@ export async function POST(req: Request) {
         nische.trim()
       );
       return NextResponse.json({ suggestion });
-    } catch {
-      return NextResponse.json({
+    } catch (err) {
+      return aiRouteFailure(err, "Creator-Vorschläge fehlgeschlagen", {
         suggestion: mockCreatorSuggestion(referentCreator.trim()),
-        mock: true,
       });
     }
   } catch (e) {

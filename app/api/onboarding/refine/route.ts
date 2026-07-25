@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { refineBriefing } from "@/lib/onboarding/briefing";
 import { mockBriefing } from "@/lib/demo/flowMock";
+import { aiRouteFailure } from "@/lib/demo/apiFallback";
 import type { CreatorReferenceSuggestion, WizardAnswers } from "@/lib/types";
 
 export const maxDuration = 60;
@@ -24,14 +25,14 @@ export async function POST(req: Request) {
         creatorSuggestion: body.creatorSuggestion,
       });
       return NextResponse.json({ briefing });
-    } catch {
+    } catch (err) {
       const briefing = mockBriefing(
         body.nische,
         body.referentCreator,
         body.answers,
         body.creatorSuggestion
       );
-      return NextResponse.json({ briefing, mock: true });
+      return aiRouteFailure(err, "Briefing fehlgeschlagen", { briefing });
     }
   } catch (e) {
     return NextResponse.json(

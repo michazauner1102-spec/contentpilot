@@ -3,6 +3,7 @@ import { buildZyklusId, generatePlan } from "@/lib/planGenerator";
 import { findReferenzVideos } from "@/lib/references";
 import { ideasToPlan, type ContentBriefing, type ResearchResult } from "@/lib/types";
 import { mockZyklusFromBriefing } from "@/lib/demo/flowMock";
+import { aiRouteFailure } from "@/lib/demo/apiFallback";
 
 export const maxDuration = 180;
 
@@ -38,14 +39,13 @@ export async function POST(req: Request) {
         bereichMix,
       };
       return NextResponse.json({ ideas, bereichMix, zyklus, referenzen });
-    } catch {
+    } catch (err) {
       const zyklus = mockZyklusFromBriefing(body.briefing);
-      return NextResponse.json({
+      return aiRouteFailure(err, "Plan fehlgeschlagen", {
         ideas: zyklus.plan,
         bereichMix: zyklus.bereichMix,
         zyklus,
         referenzen: [],
-        mock: true,
       });
     }
   } catch (e) {

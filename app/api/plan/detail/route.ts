@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateVideoDetails } from "@/lib/shotListGenerator";
 import { mockVideoDetails } from "@/lib/demo/flowMock";
+import { aiRouteFailure } from "@/lib/demo/apiFallback";
 import type { ReferenzVideo, ResearchResult, VideoIdea } from "@/lib/types";
 
 export const maxDuration = 120;
@@ -22,10 +23,9 @@ export async function POST(req: Request) {
         body.referenzen
       );
       return NextResponse.json(details);
-    } catch {
-      return NextResponse.json({
+    } catch (err) {
+      return aiRouteFailure(err, "Detail-Generierung fehlgeschlagen", {
         ...mockVideoDetails(body.videoIdea, body.research),
-        mock: true,
       });
     }
   } catch (e) {

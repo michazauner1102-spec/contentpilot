@@ -1,4 +1,5 @@
 import { isLlmConfigured, callClaudeJSON } from "@/lib/llm";
+import { liveAiEnabled } from "@/lib/demo/liveAi";
 import type { ContentBriefing } from "@/lib/types";
 import type { BrainstormIdea, ContentPillar } from "./contentPillars";
 import { PILLAR_META } from "./contentPillars";
@@ -94,7 +95,8 @@ Erzeuge je ${countPerPillar} Ideen pro Säule (${countPerPillar * 3} total). Deu
       id: idea.id || `gen-${i}`,
       status: "idee" as const,
     }));
-  } catch {
+  } catch (err) {
+    if (liveAiEnabled()) throw err;
     return mockBrainstormIdeas(nische);
   }
 }
