@@ -28,6 +28,8 @@ import {
 import type { ResearchThemenBlock } from "@/lib/research/themenBlocks";
 import type { BrainstormIdea } from "@/lib/brainstorm/contentPillars";
 import type { BereichGrouped, VideoWithInsights } from "@/lib/insights/types";
+import type { ImportScheduleResult } from "@/lib/plan/importExternalSchedule";
+import { buildZyklusId } from "@/lib/planGenerator";
 import { computePlanDiff, type PlanDiffSummary } from "@/lib/planDiff";
 import { DEMO_DIFF } from "@/lib/demo/mockData";
 import { BTN_ACCENT, BTN_PRIMARY, BTN_SECONDARY, INPUT_FIELD, type AppMenuId } from "@/lib/ui/theme";
@@ -124,6 +126,7 @@ export function ContentFlowApp() {
   const [learningsMock, setLearningsMock] = useState(false);
   const [planDiff, setPlanDiff] = useState<PlanDiffSummary | null>(null);
   const [planVersion, setPlanVersion] = useState<1 | 2>(1);
+  const [planImportLabel, setPlanImportLabel] = useState<string | null>(null);
   const [planV2Loading, setPlanV2Loading] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -251,6 +254,52 @@ export function ContentFlowApp() {
     );
     setSelectedVideo((cur) => (cur?.id === updated.id ? updated : cur));
   }, []);
+
+  const applyImportedSchedule = useCallback(
+    (result: ImportScheduleResult) => {
+      const nische =
+        briefing?.praezisierteNische ||
+        briefing?.nische ||
+        zyklus?.nische ||
+        "Import";
+      const monat = result.monat ?? zyklus?.monat ?? new Date().toISOString().slice(0, 7);
+      const nextZyklus: Zyklus = zyklus
+        ? {
+            ...zyklus,
+            plan: result.plan,
+            bereichMix: result.bereichMix,
+            monat,
+          }
+        : {
+            id: buildZyklusId(nische, 1),
+            nische,
+            monat,
+            plan: result.plan,
+            bereichMix: result.bereichMix,
+          };
+      setZyklus(nextZyklus);
+      setPlanVersion(1);
+      setPlanDiff(null);
+      setPerformance([]);
+      setLearnings(null);
+      setSelectedVideo(null);
+      setPhase("plan");
+      setMenu("calendar");
+      const labels: Record<string, string> = {
+        buffer: "Buffer",
+        hootsuite: "Hootsuite",
+        contentpilot: "ContentPilot",
+        generic: "Import",
+        unknown: "Import",
+      };
+      setPlanImportLabel(labels[result.source] ?? "Import");
+      pushProgress(
+        "Import",
+        `${result.importedCount} Posts aus ${labels[result.source] ?? "Scheduling"} — Kalender ersetzt`
+      );
+    },
+    [briefing, zyklus, pushProgress]
+  );
 
   const loadVideoDetail = useCallback(
     async (video: VideoDetails, options?: { force?: boolean }) => {
@@ -397,6 +446,7 @@ export function ContentFlowApp() {
       );
       setZyklus({ ...(planData.zyklus as Zyklus), learnings: nextLearnings });
       setPlanVersion(2);
+      setPlanImportLabel(null);
       // Neuer Zyklus: alte Auswahl, To-do-Haken und Metriken gehören zu Plan v1.
       setSelectedVideo(null);
       setRecordedIds([]);
@@ -513,6 +563,7 @@ export function ContentFlowApp() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setZyklus(data.zyklus);
+      setPlanImportLabel(null);
       setPerformance([]);
       setSelectedVideo(null);
       setLearnings(null);
@@ -674,6 +725,7 @@ export function ContentFlowApp() {
                 onLoadDetail={loadVideoDetail}
                 detailLoading={detailLoading}
                 planVersion={planVersion}
+                importSourceLabel={planImportLabel}
               />
             ) : (
               <AccountEmpty onStart={openSetup} />
@@ -742,6 +794,7 @@ export function ContentFlowApp() {
               planVersion={planVersion}
               onApplyMonthSuggestion={patchPlanVideo}
               onMonthSuggestionLog={(msg) => pushProgress("HITL", msg)}
+              onImportSchedule={applyImportedSchedule}
             />
           )}
 

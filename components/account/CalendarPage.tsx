@@ -18,6 +18,7 @@ interface CalendarPageProps {
   ) => void;
   detailLoading: boolean;
   planVersion?: 1 | 2;
+  importSourceLabel?: string | null;
 }
 
 export function CalendarPage({
@@ -29,6 +30,7 @@ export function CalendarPage({
   onLoadDetail,
   detailLoading,
   planVersion = 1,
+  importSourceLabel,
 }: CalendarPageProps) {
   return (
     <div className="space-y-8 w-full">
@@ -38,6 +40,11 @@ export function CalendarPage({
           {planVersion === 2 && (
             <span className="text-[10px] uppercase tracking-wide rounded px-1.5 py-0.5 border border-[var(--accent)]/60 bg-[var(--surface-elevated)]">
               Plan v2 · aus Learnings
+            </span>
+          )}
+          {importSourceLabel && planVersion !== 2 && (
+            <span className="text-[10px] uppercase tracking-wide rounded px-1.5 py-0.5 border border-[var(--border)] bg-[var(--surface-elevated)]">
+              Import · {importSourceLabel}
             </span>
           )}
         </div>

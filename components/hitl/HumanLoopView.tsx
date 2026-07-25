@@ -5,6 +5,8 @@ import { ResearchBoard } from "@/components/ResearchBoard";
 import { ExportPanel } from "@/components/ExportPanel";
 import { PipelineStrip } from "@/components/PipelineStrip";
 import { MonthSuggestionPanel } from "@/components/hitl/MonthSuggestionPanel";
+import { PlanImportPanel } from "@/components/plan/PlanImportPanel";
+import type { ImportScheduleResult } from "@/lib/plan/importExternalSchedule";
 import type { ResearchThemenBlock } from "@/lib/research/themenBlocks";
 import type { ResearchFocusId } from "@/lib/research/themenBlocks";
 import type { BrainstormIdea } from "@/lib/brainstorm/contentPillars";
@@ -46,6 +48,7 @@ interface HumanLoopViewProps {
   planVersion?: number;
   onApplyMonthSuggestion?: (video: VideoDetails) => void;
   onMonthSuggestionLog?: (message: string) => void;
+  onImportSchedule?: (result: ImportScheduleResult) => void;
 }
 
 export function HumanLoopView(props: HumanLoopViewProps) {
@@ -104,6 +107,16 @@ export function HumanLoopView(props: HumanLoopViewProps) {
         <p className="text-sm text-[var(--muted)]">
           Zuerst Plan-Setup unter Account abschließen (mindestens bis Briefing).
         </p>
+      )}
+
+      {props.briefing && (
+        <PlanImportPanel
+          refMonth={props.zyklus?.monat}
+          hasExistingPlan={Boolean(props.zyklus?.plan.length)}
+          loading={props.loading}
+          onImport={(result) => props.onImportSchedule?.(result)}
+          onLogged={props.onMonthSuggestionLog}
+        />
       )}
 
       {props.briefing && (
