@@ -23,6 +23,7 @@ interface PlanImportPanelProps {
   refMonth?: string;
   hasExistingPlan?: boolean;
   loading?: boolean;
+  variant?: "full" | "calendar";
   onImport: (result: ImportScheduleResult) => void;
   onLogged?: (message: string) => void;
 }
@@ -31,9 +32,11 @@ export function PlanImportPanel({
   refMonth,
   hasExistingPlan,
   loading,
+  variant = "full",
   onImport,
   onLogged,
 }: PlanImportPanelProps) {
+  const isCalendar = variant === "calendar";
   const fileRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState("");
   const [preview, setPreview] = useState<ImportScheduleResult | null>(null);
@@ -55,18 +58,21 @@ export function PlanImportPanel({
     const content = await file.text();
     setText(content);
     runParse(content, file.name);
+    if (isCalendar) {
+      await applyImport(content, file.name);
+    }
   };
 
-  const confirmImport = async () => {
-    const content = text.trim();
-    if (!content && !preview) return;
+  const applyImport = async (content: string, fileName?: string) => {
+    const trimmed = content.trim();
+    if (!trimmed) return;
     setBusy(true);
     setError(null);
     try {
       const res = await fetch("/api/plan/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, refMonth }),
+        body: JSON.stringify({ content: trimmed, refMonth, fileName }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Import fehlgeschlagen");
@@ -77,20 +83,24 @@ export function PlanImportPanel({
         `${result.importedCount} Posts aus ${SOURCE_LABEL[result.source]} — Kalender ersetzt`
       );
     } catch (e) {
-      if (content) {
-        const fallback = importExternalSchedule(content, { refMonth });
-        if (fallback.importedCount > 0) {
-          onImport(fallback);
-          onLogged?.(`${fallback.importedCount} Posts lokal importiert`);
-          setPreview(fallback);
-        } else {
-          setError(e instanceof Error ? e.message : "Import fehlgeschlagen");
-        }
+      const fallback = importExternalSchedule(trimmed, { refMonth, fileName });
+      if (fallback.importedCount > 0) {
+        onImport(fallback);
+        setPreview(fallback);
+        onLogged?.(`${fallback.importedCount} Posts lokal importiert`);
       } else {
         setError(e instanceof Error ? e.message : "Import fehlgeschlagen");
       }
     } finally {
       setBusy(false);
+    }
+  };
+
+  const confirmImport = async () => {
+    const content = text.trim();
+    if (!content && !preview) return;
+    if (content) {
+      await applyImport(content);
     }
   };
 
@@ -100,14 +110,34 @@ export function PlanImportPanel({
   };
 
   return (
-    <section className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
-      <div>
-        <h2 className="font-semibold">Plan importieren (Buffer / Hootsuite)</h2>
-        <p className="text-sm text-[var(--muted)] mt-1 leading-relaxed">
-          CSV- oder JSON-Export aus Scheduling-Tools hochladen — ersetzt den
-          KI-30-Tage-Plan im Kalender. Danach kannst du weiter Skripte,
-          To-dos und Loop wie gewohnt nutzen.
-        </p>
+    <section
+      className={`space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] ${
+        isCalendar ? "p-3 sm:p-4" : "p-4"
+      }`}
+    >
+      <div className={isCalendar ? "flex flex-wrap items-start justify-between gap-3" : ""}>
+        <div className="min-w-0 flex-1">
+          <h2 className={`font-semibold ${isCalendar ? "text-base" : ""}`}>
+            {isCalendar
+              ? "Posts hochladen (Buffer / Hootsuite)"
+              : "Plan importieren (Buffer / Hootsuite)"}
+          </h2>
+          <p className="text-sm text-[var(--muted)] mt-1 leading-relaxed">
+            {isCalendar
+              ? "CSV oder JSON hier hochladen — ersetzt die Einträge in diesem Kalender."
+              : "CSV- oder JSON-Export aus Scheduling-Tools hochladen — ersetzt den KI-30-Tage-Plan im Kalender. Danach kannst du weiter Skripte, To-dos und Loop wie gewohnt nutzen."}
+          </p>
+        </div>
+        {isCalendar && (
+          <button
+            type="button"
+            className={BTN_PRIMARY}
+            disabled={loading || busy}
+            onClick={() => fileRef.current?.click()}
+          >
+            {busy ? "Import …" : "Datei hochladen"}
+          </button>
+        )}
       </div>
 
       <input
@@ -122,77 +152,146 @@ export function PlanImportPanel({
         }}
       />
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          className={BTN_SECONDARY}
-          disabled={loading || busy}
-          onClick={() => fileRef.current?.click()}
-        >
-          Datei wählen (.csv / .json)
-        </button>
-        <button
-          type="button"
-          className={BTN_SECONDARY}
-          disabled={loading || busy}
-          onClick={() => loadSample(SAMPLE_BUFFER_CSV)}
-        >
-          Buffer-Beispiel
-        </button>
-        <button
-          type="button"
-          className={BTN_SECONDARY}
-          disabled={loading || busy}
-          onClick={() => loadSample(SAMPLE_HOOTSUITE_CSV)}
-        >
-          Hootsuite-Beispiel
-        </button>
-        <button
-          type="button"
-          className={BTN_SECONDARY}
-          disabled={loading || busy}
-          onClick={() =>
-            downloadTextFile(
-              SAMPLE_BUFFER_CSV,
-              "contentpilot-import-vorlage-buffer.csv",
-              "text/csv;charset=utf-8"
-            )
-          }
-        >
-          Vorlage CSV
-        </button>
-      </div>
+      {!isCalendar && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className={BTN_SECONDARY}
+            disabled={loading || busy}
+            onClick={() => fileRef.current?.click()}
+          >
+            Datei wählen (.csv / .json)
+          </button>
+          <button
+            type="button"
+            className={BTN_SECONDARY}
+            disabled={loading || busy}
+            onClick={() => loadSample(SAMPLE_BUFFER_CSV)}
+          >
+            Buffer-Beispiel
+          </button>
+          <button
+            type="button"
+            className={BTN_SECONDARY}
+            disabled={loading || busy}
+            onClick={() => loadSample(SAMPLE_HOOTSUITE_CSV)}
+          >
+            Hootsuite-Beispiel
+          </button>
+          <button
+            type="button"
+            className={BTN_SECONDARY}
+            disabled={loading || busy}
+            onClick={() =>
+              downloadTextFile(
+                SAMPLE_BUFFER_CSV,
+                "contentpilot-import-vorlage-buffer.csv",
+                "text/csv;charset=utf-8"
+              )
+            }
+          >
+            Vorlage CSV
+          </button>
+        </div>
+      )}
 
-      <label className="block space-y-1.5">
-        <span className="text-sm font-medium">Oder Inhalt einfügen</span>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          rows={5}
-          placeholder="Buffer: Spalten Text, Scheduled At, Channel …&#10;Hootsuite: Date, Time, Message, Social Network Profiles …"
-          className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm font-mono resize-y min-h-[100px]"
-          disabled={loading || busy}
-        />
-      </label>
+      {isCalendar ? (
+        <details className="text-sm">
+          <summary className="cursor-pointer text-[var(--muted)] hover:text-[var(--foreground)]">
+            CSV einfügen, Vorschau oder Beispieldatei
+          </summary>
+          <div className="mt-3 space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={BTN_SECONDARY}
+                disabled={loading || busy}
+                onClick={() => fileRef.current?.click()}
+              >
+                Andere Datei wählen
+              </button>
+              <button
+                type="button"
+                className={BTN_SECONDARY}
+                disabled={loading || busy}
+                onClick={() => loadSample(SAMPLE_BUFFER_CSV)}
+              >
+                Buffer-Beispiel
+              </button>
+              <button
+                type="button"
+                className={BTN_SECONDARY}
+                disabled={loading || busy}
+                onClick={() => loadSample(SAMPLE_HOOTSUITE_CSV)}
+              >
+                Hootsuite-Beispiel
+              </button>
+            </div>
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium">Inhalt einfügen</span>
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                rows={4}
+                placeholder="Buffer: Text, Scheduled At, Channel …"
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm font-mono resize-y"
+                disabled={loading || busy}
+              />
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={BTN_SECONDARY}
+                disabled={!text.trim() || loading || busy}
+                onClick={() => runParse(text)}
+              >
+                Vorschau
+              </button>
+              <button
+                type="button"
+                className={BTN_PRIMARY}
+                disabled={(!text.trim() && !preview) || loading || busy}
+                onClick={() => void confirmImport()}
+              >
+                {busy ? "Import …" : "Kalender ersetzen"}
+              </button>
+            </div>
+          </div>
+        </details>
+      ) : (
+        <>
+          <label className="block space-y-1.5">
+            <span className="text-sm font-medium">Oder Inhalt einfügen</span>
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              rows={5}
+              placeholder="Buffer: Spalten Text, Scheduled At, Channel …&#10;Hootsuite: Date, Time, Message, Social Network Profiles …"
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm font-mono resize-y min-h-[100px]"
+              disabled={loading || busy}
+            />
+          </label>
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          className={BTN_SECONDARY}
-          disabled={!text.trim() || loading || busy}
-          onClick={() => runParse(text)}
-        >
-          Vorschau
-        </button>
-        <button
-          type="button"
-          className={BTN_PRIMARY}
-          disabled={(!text.trim() && !preview) || loading || busy}
-          onClick={() => void confirmImport()}
-        >
-          {busy ? "Import …" : hasExistingPlan ? "Kalender ersetzen" : "Als Plan übernehmen"}
-        </button>
-      </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={BTN_SECONDARY}
+              disabled={!text.trim() || loading || busy}
+              onClick={() => runParse(text)}
+            >
+              Vorschau
+            </button>
+            <button
+              type="button"
+              className={BTN_PRIMARY}
+              disabled={(!text.trim() && !preview) || loading || busy}
+              onClick={() => void confirmImport()}
+            >
+              {busy ? "Import …" : hasExistingPlan ? "Kalender ersetzen" : "Als Plan übernehmen"}
+            </button>
+          </div>
+        </>
+      )}
 
       {hasExistingPlan && (
         <p className="text-xs text-amber-700 dark:text-amber-400">

@@ -4,6 +4,8 @@ import {
   SpaciousCalendar,
   DayDetailDrawer,
 } from "@/components/account/AccountView";
+import { PlanImportPanel } from "@/components/plan/PlanImportPanel";
+import type { ImportScheduleResult } from "@/lib/plan/importExternalSchedule";
 import type { VideoDetails, Zyklus } from "@/lib/types";
 
 interface CalendarPageProps {
@@ -19,6 +21,8 @@ interface CalendarPageProps {
   detailLoading: boolean;
   planVersion?: 1 | 2;
   importSourceLabel?: string | null;
+  onImportSchedule?: (result: ImportScheduleResult) => void;
+  onImportLog?: (message: string) => void;
 }
 
 export function CalendarPage({
@@ -31,6 +35,8 @@ export function CalendarPage({
   detailLoading,
   planVersion = 1,
   importSourceLabel,
+  onImportSchedule,
+  onImportLog,
 }: CalendarPageProps) {
   return (
     <div className="space-y-8 w-full">
@@ -49,9 +55,21 @@ export function CalendarPage({
           )}
         </div>
         <p className="text-sm text-[var(--muted)] mt-1">
-          Tag anklicken — Thema, Skript und Vorschläge im Drawer.
+          Tag anklicken — Thema, Skript und Vorschläge im Drawer. Oder geplante
+          Posts aus Buffer/Hootsuite hochladen.
         </p>
       </header>
+
+      {onImportSchedule && (
+        <PlanImportPanel
+          variant="calendar"
+          refMonth={zyklus.monat}
+          hasExistingPlan={zyklus.plan.length > 0}
+          onImport={onImportSchedule}
+          onLogged={onImportLog}
+        />
+      )}
+
       <SpaciousCalendar
         plan={zyklus.plan}
         onSelectDay={onSelectVideo}

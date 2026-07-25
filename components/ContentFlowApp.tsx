@@ -726,6 +726,8 @@ export function ContentFlowApp() {
                 detailLoading={detailLoading}
                 planVersion={planVersion}
                 importSourceLabel={planImportLabel}
+                onImportSchedule={applyImportedSchedule}
+                onImportLog={(msg) => pushProgress("Import", msg)}
               />
             ) : (
               <AccountEmpty onStart={openSetup} />
