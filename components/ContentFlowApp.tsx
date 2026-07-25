@@ -999,7 +999,7 @@ export function ContentFlowApp() {
           onClick={() => closeSetup()}
         >
           <div
-            className="w-full max-w-4xl rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-6 sm:p-8 space-y-6 my-6 sm:my-10 shadow-2xl shadow-black/50 shrink-0"
+            className="w-full max-w-4xl rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-6 sm:p-8 space-y-6 my-6 sm:my-10 shrink-0 [box-shadow:var(--shadow-modal)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-start gap-4">
