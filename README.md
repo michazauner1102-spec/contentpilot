@@ -187,6 +187,20 @@ Optional: `LLM_MODEL` setzen (sonst sinnvoller Default pro Provider).
 
 ---
 
+## Live-Demo (öffentlich, Mock-Daten)
+
+Deploy auf **Render** (Free Tier, Frankfurt) — ohne API-Keys lauffähig (`INSIGHTS_MODE=mock`, Demo-Banner).
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/michazauner1102-spec/contentpilot)
+
+1. Button klicken → Render-Account verbinden → **Apply**  
+2. Optional: LLM-/Research-Keys später in Environment setzen  
+3. Nach dem Build: URL z. B. `https://contentpilot.onrender.com` (Name ggf. mit Suffix)
+
+Lokal wie die Live-Demo: `INSIGHTS_MODE=mock` und `NEXT_PUBLIC_DEMO_MODE=true` in `.env.local`.
+
+---
+
 ## Deployment (Render)
 
 [`render.yaml`](render.yaml) liegt als Blueprint bereit:

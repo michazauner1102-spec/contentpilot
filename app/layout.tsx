@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { DemoModeBanner } from "@/components/shell/DemoModeBanner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,8 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ContentPilot",
-  description: "30-Tage-Video-Plan mit Loop Engineering für Social Media",
+  title: "ContentPilot — 30-Tage Content Demo",
+  description:
+    "Öffentliche Demo: Plan-Setup, Kalender, Metriken, Monats-Feedback und Plan v2 (Mock-Daten).",
+  openGraph: {
+    title: "ContentPilot Demo",
+    description: "30-Tage Social-Video-Loop — live ausprobieren.",
+  },
 };
 
 export default function RootLayout({
@@ -27,7 +33,10 @@ export default function RootLayout({
       lang="de"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <DemoModeBanner />
+        {children}
+      </body>
     </html>
   );
 }
