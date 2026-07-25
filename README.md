@@ -38,6 +38,8 @@ ContentPilot ist ein **MVP für Creator und Marketing-Teams**, die Social-Video 
 | **Produktion mitdenken** | Aufnahme-To-dos nach Dreh-Wochen, Checkliste, Fortschritt |
 | **Geschlossener Loop** | Dashboard → Metriken → Learnings → **Plan v2** + **Monats-Feedback** (Trends, Kommentare) |
 | **Skript aus Inhalt** | Pro Kalender-Tag: Inhaltsvorschlag → **Skript generieren** (Hook, Inhalt, CTA, Bildideen) |
+| **Scheduling-Import** | **Buffer / Hootsuite** CSV/JSON im **Kalender** oder HITL — ersetzt den Plan, danach Skript & Loop |
+| **Monatsvorschläge (HITL)** | Eigene Ideen für Plan v2 einreichen → **KI bewertet** → in den Kalender übernehmen |
 | **Export-ready** | Markdown, TXT, JSON, Notion (optional) |
 
 ---
@@ -68,10 +70,12 @@ flowchart LR
 
 1. **Plan-Setup** — Nische, 5 Fragen, Briefing, optional Trend-Research  
 2. **Human in the Loop** — Brainstorm-Board, Research, Plan freigeben  
-3. **Kalender** — 30 Tage; Tag-Detail mit Inhaltsvorschlag, Skript, Bildvorschläge, Drehliste  
+3. **Kalender** — 30 Tage; **Posts hochladen** (Buffer/Hootsuite); Tag-Detail mit Skript, Bildvorschläge, Drehliste  
 4. **Aufnahme-To-dos** — Wochen fürs Drehen, abhaken was fertig ist  
 5. **Dashboard** — KPIs, einklappbare Plattformen, Report pro Kanal  
 6. **Loop** — Learnings je Bereich, **Monats-Feedback-Dokument** (Markdown), Plan v2 im Kalender  
+
+**Pitch & Demo-Script:** [`docs/plattform-erklaeren.md`](docs/plattform-erklaeren.md)
 
 ---
 
@@ -235,6 +239,8 @@ docs/                Banner, Screenshots für README
 ## Insights, Feedback & Export
 
 - Performance-Demo: `InsightsService` / Mock-Import über `/api/performance/import`  
+- **Plan-Import:** `POST /api/plan/import` — Buffer/Hootsuite CSV oder JSON → Kalender  
+- **HITL Monatsvorschlag:** `POST /api/hitl/month-suggestion` — KI-Bewertung für Plan v2  
 - **Monats-Feedback:** `POST /api/loop/feedback-document` — Trends, Gut/Schwach, Vorschläge, Kommentar-Analyse  
 - Loop-Learnings: `/api/loop/analyze` → Plan v2 über `/api/plan/generate`  
 - Export: Markdown, Notizen, JSON, Zwischenablage; optional Notion  
