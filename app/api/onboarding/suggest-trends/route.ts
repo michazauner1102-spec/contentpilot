@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { draftTrendSuggestions } from "@/lib/trends/draftSuggestions";
+import { parseWebResearchProvider } from "@/lib/research/webResearchProviders";
 import type { WizardAnswerKey } from "@/lib/onboarding/wizardQuestions";
 
 export const maxDuration = 90;
@@ -13,6 +14,7 @@ export async function POST(req: Request) {
       iterationFeedback?: string;
       rejectedLabels?: string[];
       iteration?: number;
+      webProvider?: string;
     };
 
     if (!body.nische?.trim() || !body.questionId) {
@@ -29,6 +31,7 @@ export async function POST(req: Request) {
       iterationFeedback: body.iterationFeedback,
       rejectedLabels: body.rejectedLabels,
       iteration: body.iteration ?? 1,
+      webProvider: parseWebResearchProvider(body.webProvider),
     });
 
     return NextResponse.json(result);

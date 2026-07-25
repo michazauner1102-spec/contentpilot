@@ -42,16 +42,18 @@ export function AppSidebar({
           </button>
         ))}
       </nav>
-      {showOnboarding && onOpenOnboarding && (
-        <button
-          type="button"
-          onClick={onOpenOnboarding}
-          className="text-sm rounded-lg border border-[var(--border)] px-3 py-2 hover:bg-[var(--surface)]"
-        >
-          Plan-Setup öffnen
-        </button>
-      )}
-      <ThemeToggle />
+      <div className="flex flex-col gap-2 lg:mt-auto">
+        {showOnboarding && onOpenOnboarding && (
+          <button
+            type="button"
+            onClick={onOpenOnboarding}
+            className="text-sm rounded-lg border border-[var(--border)] px-3 py-2 hover:bg-[var(--surface)]"
+          >
+            Plan-Setup öffnen
+          </button>
+        )}
+        <ThemeToggle />
+      </div>
     </aside>
   );
 }

@@ -26,6 +26,11 @@ import {
   RESEARCH_FOCUS_OPTIONS,
 } from "@/lib/research/themenBlocks";
 import type { ResearchThemenBlock } from "@/lib/research/themenBlocks";
+import {
+  parseWebResearchProvider,
+  webResearchSourceLabel,
+  type WebResearchProviderId,
+} from "@/lib/research/webResearchProviders";
 import type { BrainstormIdea } from "@/lib/brainstorm/contentPillars";
 import type { BereichGrouped, VideoWithInsights } from "@/lib/insights/types";
 import type { ImportScheduleResult } from "@/lib/plan/importExternalSchedule";
@@ -77,6 +82,7 @@ interface PersistedFlow {
   research: (ResearchResult & { researchNotizen?: string }) | null;
   researchCycle: number;
   researchThemen: ResearchThemenBlock[];
+  researchWebProvider?: WebResearchProviderId;
   brainstormIdeas: BrainstormIdea[];
   calendars: Zyklus[];
   activeCalendarId: string | null;
@@ -125,6 +131,11 @@ export function ContentFlowApp() {
   const [researchThemen, setResearchThemen] = useState<ResearchThemenBlock[]>(
     []
   );
+  const [researchWebProvider, setResearchWebProvider] =
+    useState<WebResearchProviderId>("auto");
+  const [researchWebSourceLabel, setResearchWebSourceLabel] = useState<
+    string | null
+  >(null);
   const [brainstormIdeas, setBrainstormIdeas] = useState<BrainstormIdea[]>([]);
   const [calendars, setCalendars] = useState<Zyklus[]>([]);
   const [activeCalendarId, setActiveCalendarId] = useState<string | null>(null);
@@ -206,6 +217,9 @@ export function ContentFlowApp() {
         if (s.research) setResearch(s.research);
         if (s.researchCycle) setResearchCycle(s.researchCycle);
         if (s.researchThemen) setResearchThemen(s.researchThemen);
+        if (s.researchWebProvider) {
+          setResearchWebProvider(parseWebResearchProvider(s.researchWebProvider));
+        }
         if (s.brainstormIdeas) setBrainstormIdeas(s.brainstormIdeas);
         if (Array.isArray(s.calendars) && s.calendars.length > 0) {
           setCalendars(s.calendars);
@@ -243,6 +257,7 @@ export function ContentFlowApp() {
       research,
       researchCycle,
       researchThemen,
+      researchWebProvider,
       brainstormIdeas,
       calendars,
       activeCalendarId,
@@ -271,6 +286,7 @@ export function ContentFlowApp() {
     research,
     researchCycle,
     researchThemen,
+    researchWebProvider,
     brainstormIdeas,
     calendars,
     activeCalendarId,
@@ -590,6 +606,7 @@ export function ContentFlowApp() {
           feedback,
           cycle: c,
           focus: researchFocus,
+          webProvider: researchWebProvider,
           brainstormIdeas: brainstormIdeas.filter(
             (i) => i.status === "freigegeben" || i.status === "entwurf"
           ),
@@ -598,6 +615,11 @@ export function ContentFlowApp() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setResearch(data.research);
+      if (data.research?.webResearchSource) {
+        setResearchWebSourceLabel(
+          webResearchSourceLabel(data.research.webResearchSource)
+        );
+      }
       setResearchThemen(
         data.themen ??
           buildThemenBlocks(
@@ -917,6 +939,9 @@ export function ContentFlowApp() {
               onResearchFeedback={setResearchFeedback}
               researchFocus={researchFocus}
               onResearchFocus={setResearchFocus}
+              researchWebProvider={researchWebProvider}
+              onResearchWebProvider={setResearchWebProvider}
+              researchWebSourceLabel={researchWebSourceLabel}
               onStartResearch={() => runResearch(undefined, 1)}
               onRerunResearch={() => {
                 const next = researchCycle + 1;
@@ -1058,6 +1083,8 @@ export function ContentFlowApp() {
                   onChange={(v) => setAnswers((a) => ({ ...a, [currentKey]: v }))}
                   nische={nische}
                   referentCreator={referentCreator}
+                  webProvider={researchWebProvider}
+                  onWebProviderChange={setResearchWebProvider}
                 />
                 <div className="flex gap-2 flex-wrap">
                   {wizardStep > 0 && (

@@ -1,5 +1,6 @@
 import { callClaudeJSON } from "@/lib/claude";
 import { researchNische } from "@/lib/research";
+import type { WebResearchProviderId } from "@/lib/research/webResearchProviders";
 import type { ContentBriefing, ResearchResult } from "@/lib/types";
 
 export async function researchWithBriefing(
@@ -7,11 +8,20 @@ export async function researchWithBriefing(
   feedback?: string,
   cycle = 1,
   focus?: string[],
-  brainstormIdeas?: import("@/lib/brainstorm/contentPillars").BrainstormIdea[]
+  brainstormIdeas?: import("@/lib/brainstorm/contentPillars").BrainstormIdea[],
+  webProvider?: WebResearchProviderId
 ): Promise<
-  ResearchResult & { researchNotizen: string; focusUsed?: string[] }
+  ResearchResult & {
+    researchNotizen: string;
+    focusUsed?: string[];
+    webResearchSource?: string;
+  }
 > {
-  const base = await researchNische(briefing.praezisierteNische || briefing.nische);
+  const base = await researchNische(
+    briefing.praezisierteNische || briefing.nische,
+    webProvider
+  );
+  const webResearchSource = base.webResearchSource;
 
   const focusNote = focus?.length
     ? `Fokus: ${focus.join(", ")}`
@@ -31,6 +41,7 @@ export async function researchWithBriefing(
       ...base,
       researchNotizen: `Recherche-Zyklus ${cycle}. ${focusNote}${brainstormNote ? `\n${brainstormNote}` : ""}`,
       focusUsed: focus,
+      webResearchSource,
     };
   }
 
@@ -60,5 +71,5 @@ ${focusNote}`,
 }`
   );
 
-  return enriched;
+  return { ...enriched, webResearchSource };
 }

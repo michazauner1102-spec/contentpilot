@@ -7,7 +7,9 @@ import {
   type WizardAnswerKey,
 } from "@/lib/onboarding/wizardQuestions";
 import { TrendSuggestionPanel } from "@/components/TrendSuggestionPanel";
+import { ResearchProviderPicker } from "@/components/research/ResearchProviderPicker";
 import { INPUT_FIELD } from "@/lib/ui/theme";
+import type { WebResearchProviderId } from "@/lib/research/webResearchProviders";
 
 interface WizardQuestionFieldProps {
   question: WizardQuestion;
@@ -15,6 +17,8 @@ interface WizardQuestionFieldProps {
   onChange: (value: string) => void;
   nische?: string;
   referentCreator?: string;
+  webProvider?: WebResearchProviderId;
+  onWebProviderChange?: (id: WebResearchProviderId) => void;
 }
 
 export function WizardQuestionField({
@@ -23,6 +27,8 @@ export function WizardQuestionField({
   onChange,
   nische = "",
   referentCreator = "",
+  webProvider = "auto",
+  onWebProviderChange,
 }: WizardQuestionFieldProps) {
   return (
     <div className="space-y-4">
@@ -92,13 +98,23 @@ export function WizardQuestionField({
       )}
 
       {nische.trim() && (
-        <TrendSuggestionPanel
-          key={question.id}
-          nische={nische}
-          referentCreator={referentCreator}
-          questionId={question.id as WizardAnswerKey}
-          onAccept={(v) => onChange(v)}
-        />
+        <>
+          {onWebProviderChange && (
+            <ResearchProviderPicker
+              value={webProvider}
+              onChange={onWebProviderChange}
+              compact
+            />
+          )}
+          <TrendSuggestionPanel
+            key={question.id}
+            nische={nische}
+            referentCreator={referentCreator}
+            questionId={question.id as WizardAnswerKey}
+            webProvider={webProvider}
+            onAccept={(v) => onChange(v)}
+          />
+        </>
       )}
 
       <div className="space-y-2">

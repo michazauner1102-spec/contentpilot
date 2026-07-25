@@ -3,11 +3,13 @@
 import { useState } from "react";
 import type { TrendDraftSuggestion } from "@/lib/trends/draftSuggestions";
 import type { WizardAnswerKey } from "@/lib/onboarding/wizardQuestions";
+import type { WebResearchProviderId } from "@/lib/research/webResearchProviders";
 
 interface TrendSuggestionPanelProps {
   nische: string;
   referentCreator: string;
   questionId: WizardAnswerKey;
+  webProvider?: WebResearchProviderId;
   onAccept: (value: string) => void;
 }
 
@@ -15,6 +17,7 @@ export function TrendSuggestionPanel({
   nische,
   referentCreator,
   questionId,
+  webProvider = "auto",
   onAccept,
 }: TrendSuggestionPanelProps) {
   const [open, setOpen] = useState(false);
@@ -41,6 +44,7 @@ export function TrendSuggestionPanel({
           iterationFeedback: opts?.feedback ?? feedback,
           rejectedLabels: rejected,
           iteration: opts?.nextIteration ?? iteration,
+          webProvider,
         }),
       });
       const data = await res.json();
@@ -79,7 +83,7 @@ export function TrendSuggestionPanel({
         }}
       >
         <div>
-          <p className="text-sm font-semibold">Trend-Research (Firecrawl)</p>
+          <p className="text-sm font-semibold">Trend-Research (Web)</p>
           <p className="text-xs text-[var(--muted)]">
             {acceptedLabel
               ? `Übernommen: ${acceptedLabel}`

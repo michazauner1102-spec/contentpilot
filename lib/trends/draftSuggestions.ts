@@ -1,6 +1,9 @@
 import { isLlmConfigured, callClaudeJSON } from "@/lib/llm";
-import { runWebResearch } from "@/lib/webResearch";
-import { firecrawlSearch } from "@/lib/trends/firecrawlClient";
+import {
+  parseWebResearchProvider,
+  runWebResearchWithProvider,
+  type WebResearchProviderId,
+} from "@/lib/research/webResearchProviders";
 import type { WizardAnswerKey } from "@/lib/onboarding/wizardQuestions";
 
 export interface TrendDraftSuggestion {
@@ -87,24 +90,19 @@ export async function draftTrendSuggestions(input: {
   iterationFeedback?: string;
   rejectedLabels?: string[];
   iteration?: number;
+  webProvider?: WebResearchProviderId;
 }): Promise<{
   suggestions: TrendDraftSuggestion[];
   researchSnippet: string;
   source: string;
 }> {
   const query = QUESTION_QUERIES[input.questionId](input.nische);
-  const { hits, source: fcSource } = await firecrawlSearch(query);
+  const provider = parseWebResearchProvider(input.webProvider);
+  const web = await runWebResearchWithProvider(input.nische, provider, {
+    queries: [query],
+  });
 
-  let snippets: string[] = hits.map(
-    (h) =>
-      `[${h.title ?? "Treffer"}] ${h.description ?? ""}\n${h.markdown ?? ""}`.trim()
-  );
-
-  if (snippets.length === 0) {
-    const web = await runWebResearch(`${input.nische} ${input.questionId}`);
-    snippets = web.snippets;
-  }
-
+  const snippets = web.snippets;
   const researchSnippet = snippets.slice(0, 5).join("\n\n---\n\n");
 
   if (!isLlmConfigured()) {
@@ -115,7 +113,7 @@ export async function draftTrendSuggestions(input: {
         input.iteration ?? 1
       ),
       researchSnippet,
-      source: fcSource === "firecrawl" ? "firecrawl+mock" : "fallback-mock",
+      source: web.source === "fallback" ? "fallback-mock" : `${web.source}+mock`,
     };
   }
 
@@ -131,7 +129,7 @@ Iteration: ${input.iteration ?? 1}
 Abgelehnte Vorschläge (nicht wiederholen): ${(input.rejectedLabels ?? []).join("; ") || "—"}
 Nutzer-Feedback für neue Runde: ${input.iterationFeedback ?? "—"}
 
-Trend-Recherche (Firecrawl/Web):
+Trend-Recherche (${web.source}):
 ${researchSnippet}`,
       `{ "suggestions": [{ "id": "unique", "label": "", "value": "", "rationale": "", "trendHint": "" }] }`
     );
@@ -144,7 +142,7 @@ ${researchSnippet}`,
     return {
       suggestions: result.suggestions.slice(0, 5),
       researchSnippet,
-      source: fcSource === "firecrawl" ? "firecrawl+claude" : "web+claude",
+      source: `${web.source}+claude`,
     };
   } catch {
     return {

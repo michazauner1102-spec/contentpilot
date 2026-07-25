@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { researchWithBriefing } from "@/lib/researchWithBriefing";
 import { buildThemenBlocks } from "@/lib/research/themenBlocks";
+import { parseWebResearchProvider } from "@/lib/research/webResearchProviders";
 import { mockResearch } from "@/lib/demo/flowMock";
 import type { ContentBriefing } from "@/lib/types";
 import type { ResearchFocusId } from "@/lib/research/themenBlocks";
@@ -15,21 +16,24 @@ export async function POST(req: Request) {
       cycle?: number;
       focus?: ResearchFocusId[];
       brainstormIdeas?: import("@/lib/brainstorm/contentPillars").BrainstormIdea[];
+      webProvider?: string;
     };
     if (!body.briefing) {
       return NextResponse.json({ error: "briefing fehlt" }, { status: 400 });
     }
     const cycle = body.cycle ?? 1;
+    const webProvider = parseWebResearchProvider(body.webProvider);
     try {
       const research = await researchWithBriefing(
         body.briefing,
         body.feedback,
         cycle,
         body.focus,
-        body.brainstormIdeas
+        body.brainstormIdeas,
+        webProvider
       );
       const themen = buildThemenBlocks(research, body.briefing.praezisierteNische || body.briefing.nische);
-      return NextResponse.json({ research, cycle, themen });
+      return NextResponse.json({ research, cycle, themen, webProvider });
     } catch {
       const research = mockResearch(cycle);
       const themen = buildThemenBlocks(research, body.briefing!.praezisierteNische || body.briefing!.nische);

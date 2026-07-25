@@ -8,7 +8,9 @@ import {
 } from "@/lib/research/themenBlocks";
 import type { ResearchResult } from "@/lib/types";
 import { BereichBadge, bereichBorder } from "@/components/PipelineStrip";
+import { ResearchProviderPicker } from "@/components/research/ResearchProviderPicker";
 import { BTN_ACCENT } from "@/lib/ui/theme";
+import type { WebResearchProviderId } from "@/lib/research/webResearchProviders";
 
 interface ResearchBoardProps {
   research: ResearchResult & { researchNotizen?: string };
@@ -23,6 +25,9 @@ interface ResearchBoardProps {
   onFocusChange: (f: ResearchFocusId[]) => void;
   onStartResearch: () => void;
   showStart?: boolean;
+  webProvider: WebResearchProviderId;
+  onWebProviderChange: (id: WebResearchProviderId) => void;
+  webSourceLabel?: string | null;
 }
 
 export function ResearchBoard({
@@ -38,6 +43,9 @@ export function ResearchBoard({
   onFocusChange,
   onStartResearch,
   showStart,
+  webProvider,
+  onWebProviderChange,
+  webSourceLabel,
 }: ResearchBoardProps) {
   const [tab, setTab] = useState<"themen" | "rohdaten">("themen");
 
@@ -74,6 +82,12 @@ export function ResearchBoard({
             );
           })}
         </div>
+        <ResearchProviderPicker
+          value={webProvider}
+          onChange={onWebProviderChange}
+          lastSourceLabel={webSourceLabel}
+          disabled={loading}
+        />
         {showStart && (
           <button
             type="button"

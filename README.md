@@ -174,17 +174,28 @@ Siehe [`.env.local.example`](.env.local.example) und [`docs/SECURITY.md`](docs/S
 
 **Öffentliche Demo:** `FORCE_MOCK_ONLY=true` + `INSIGHTS_MODE=mock` (siehe [`render.yaml`](render.yaml)).
 
-### LLM (einer reicht — per `LLM_PROVIDER` wählen)
+### LLM — **essentiell** für echte KI (genau **einer**)
 
-| Provider | `LLM_PROVIDER` | API-Key |
-|----------|----------------|---------|
+`FORCE_MOCK_ONLY` aus → **einen** Provider wählen und **nur den passenden** API-Key setzen:
+
+| Provider | `LLM_PROVIDER` | API-Key (nur dieser eine) |
+|----------|----------------|---------------------------|
 | **Anthropic Claude** (Default) | `anthropic` | `ANTHROPIC_API_KEY` |
 | **Google Gemini** | `gemini` | `GOOGLE_GENERATIVE_AI_API_KEY` oder `GEMINI_API_KEY` |
 | **OpenAI** | `openai` | `OPENAI_API_KEY` |
 
-Optional: `LLM_MODEL` setzen (sonst sinnvoller Default pro Provider).
+Optional: `LLM_MODEL` (sonst Default pro Provider). Plan, Skripte, Research-Synthese und Trend-Vorschläge laufen über dieses eine LLM.
 
-### Referenz-Videos & Metriken (Plattformen)
+### Research & Export — **optional**
+
+| Variable | Zweck |
+|----------|--------|
+| `RESEARCH_WEB_PROVIDER` | Firecrawl, Perplexity, Tavily, … in der UI (Default: `auto`) |
+| `TAVILY_API_KEY` / `PERPLEXITY_API_KEY` / `FIRECRAWL_API_KEY` | Live-Web-Snippets; **ohne Keys:** Fallback, LLM nutzt Allgemeinwissen |
+| Gemini/Claude **Research** in der UI | Derselbe Key wie dein LLM (`gemini` / `anthropic`) — kein zweites LLM |
+| `NOTION_TOKEN` + `NOTION_DATABASE_ID` | Notion-Sync |
+
+### Referenz-Videos & Metriken (optional)
 
 | Plattform | Referenzen | Metriken (Live-Vorbereitung) |
 |-----------|------------|------------------------------|
@@ -197,14 +208,6 @@ Optional: `LLM_MODEL` setzen (sonst sinnvoller Default pro Provider).
 - `INSIGHTS_MODE=mock` (Default) — plattformspezifische **Demo-Metriken** im Dashboard  
 - `INSIGHTS_MODE=live` — nutzt konfigurierte API-Keys, sonst Mock-Fallback  
 
-### Research & Export
-
-| Variable | Zweck |
-|----------|--------|
-| `TAVILY_API_KEY` / `PERPLEXITY_API_KEY` | Web-Research |
-| `FIRECRAWL_API_KEY` | Trend-Research im Wizard |
-| `NOTION_TOKEN` + `NOTION_DATABASE_ID` | Optional: Notion-Sync |
-
 ---
 
 ## Live-Demo (öffentlich, Mock-Daten)
@@ -216,7 +219,7 @@ Deploy auf **Render** (Free Tier, Frankfurt) — ohne API-Keys lauffähig (`INSI
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/michazauner1102-spec/contentpilot)
 
 1. Button klicken → Render-Account verbinden → **Apply** (eigene Instanz)  
-2. Optional: LLM-/Research-Keys später in Environment setzen  
+2. Optional: **ein** LLM-Key für echte KI; Web-Research-Keys nur bei Bedarf  
 3. Free Tier: nach Inaktivität Cold Start (~30–60 s beim ersten Aufruf)
 
 Lokal wie die Live-Demo: `INSIGHTS_MODE=mock` und `NEXT_PUBLIC_DEMO_MODE=true` in `.env.local`.

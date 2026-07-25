@@ -9,6 +9,7 @@ import { PlanImportPanel } from "@/components/plan/PlanImportPanel";
 import type { ImportScheduleResult } from "@/lib/plan/importExternalSchedule";
 import type { ResearchThemenBlock } from "@/lib/research/themenBlocks";
 import type { ResearchFocusId } from "@/lib/research/themenBlocks";
+import type { WebResearchProviderId } from "@/lib/research/webResearchProviders";
 import type { BrainstormIdea } from "@/lib/brainstorm/contentPillars";
 import type {
   ContentBriefing,
@@ -31,6 +32,9 @@ interface HumanLoopViewProps {
   onResearchFeedback: (v: string) => void;
   researchFocus: ResearchFocusId[];
   onResearchFocus: (f: ResearchFocusId[]) => void;
+  researchWebProvider: WebResearchProviderId;
+  onResearchWebProvider: (id: WebResearchProviderId) => void;
+  researchWebSourceLabel?: string | null;
   onStartResearch: () => void;
   onRerunResearch: () => void;
   onApprovePlan: () => void;
@@ -100,6 +104,9 @@ export function HumanLoopView(props: HumanLoopViewProps) {
           onFocusChange={props.onResearchFocus}
           onStartResearch={props.onStartResearch}
           showStart={!props.research}
+          webProvider={props.researchWebProvider}
+          onWebProviderChange={props.onResearchWebProvider}
+          webSourceLabel={props.researchWebSourceLabel}
         />
       )}
 

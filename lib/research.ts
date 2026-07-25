@@ -1,11 +1,15 @@
 import { runWebResearch } from "@/lib/webResearch";
+import type { WebResearchProviderId } from "@/lib/research/webResearchProviders";
 import { callClaudeJSON } from "@/lib/claude";
 import type { ResearchResult } from "@/lib/types";
 
-export async function researchNische(nische: string): Promise<ResearchResult> {
-  const web = await runWebResearch(nische);
+export async function researchNische(
+  nische: string,
+  webProvider?: WebResearchProviderId
+): Promise<ResearchResult & { webResearchSource?: string }> {
+  const web = await runWebResearch(nische, webProvider);
 
-  return callClaudeJSON<ResearchResult>(
+  const profile = await callClaudeJSON<ResearchResult>(
     `Du bist Content-Strategie-Researcher für Social-Media-Video.`,
     `Nische: "${nische}"
 
@@ -20,4 +24,6 @@ Erstelle ein Research-Profil für Video-Content in dieser Nische.`,
   "tonality": "optional string"
 }`
   );
+
+  return { ...profile, webResearchSource: web.source };
 }
