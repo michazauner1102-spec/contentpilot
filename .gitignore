@@ -17,3 +17,6 @@ npm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright (local browsers under node_modules)
+/playwright/.cache/
