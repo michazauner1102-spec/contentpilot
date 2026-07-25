@@ -78,8 +78,8 @@ async function seedAndReload(
     ({ key, data }) => localStorage.setItem(key, JSON.stringify(data)),
     { key: STORAGE_KEY, data: snapshot }
   );
-  await page.reload({ waitUntil: "networkidle" });
-  await page.waitForTimeout(800);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(1200);
 }
 
 async function shot(page: import("playwright").Page, name: string) {
@@ -111,8 +111,16 @@ async function main() {
 
   // Kalender mit Tag-Detail (Inhaltsvorschlag + Skript)
   await seedAndReload(page, demoSnapshot("calendar", { zyklus: v1 }));
-  await page.getByRole("button", { name: /Reichweite-Hook Tag 10/i }).click();
-  await page.waitForTimeout(900);
+  await page.getByRole("heading", { name: "Kalender" }).waitFor({ timeout: 15000 });
+  await page.getByRole("button", { name: /Tag 10/i }).first().click();
+  await page.waitForTimeout(1200);
+  const scriptBtn = page.getByRole("button", {
+    name: /Skript rechts anzeigen|Jetzt Skript erstellen/i,
+  });
+  if (await scriptBtn.isVisible().catch(() => false)) {
+    await scriptBtn.click();
+    await page.waitForTimeout(800);
+  }
   await shot(page, "01-kalender.png");
   await page.keyboard.press("Escape");
   await page.waitForTimeout(400);
