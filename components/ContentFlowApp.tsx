@@ -738,6 +738,10 @@ export function ContentFlowApp() {
               progressLog={progressLog}
               onExportNotion={() => syncNotion()}
               notionUrl={notionUrl}
+              learnings={learnings}
+              planVersion={planVersion}
+              onApplyMonthSuggestion={patchPlanVideo}
+              onMonthSuggestionLog={(msg) => pushProgress("HITL", msg)}
             />
           )}
 

@@ -4,15 +4,18 @@ import { BrainstormBoard } from "@/components/BrainstormBoard";
 import { ResearchBoard } from "@/components/ResearchBoard";
 import { ExportPanel } from "@/components/ExportPanel";
 import { PipelineStrip } from "@/components/PipelineStrip";
+import { MonthSuggestionPanel } from "@/components/hitl/MonthSuggestionPanel";
 import type { ResearchThemenBlock } from "@/lib/research/themenBlocks";
 import type { ResearchFocusId } from "@/lib/research/themenBlocks";
 import type { BrainstormIdea } from "@/lib/brainstorm/contentPillars";
 import type {
   ContentBriefing,
   CreatorReferenceSuggestion,
+  LoopAnalysisResult,
   ProductionGuide,
   ProgressEntry,
   ResearchResult,
+  VideoDetails,
   Zyklus,
 } from "@/lib/types";
 
@@ -39,6 +42,10 @@ interface HumanLoopViewProps {
   progressLog: ProgressEntry[];
   onExportNotion?: () => void;
   notionUrl?: string | null;
+  learnings?: LoopAnalysisResult | null;
+  planVersion?: number;
+  onApplyMonthSuggestion?: (video: VideoDetails) => void;
+  onMonthSuggestionLog?: (message: string) => void;
 }
 
 export function HumanLoopView(props: HumanLoopViewProps) {
@@ -49,7 +56,8 @@ export function HumanLoopView(props: HumanLoopViewProps) {
       <header className="space-y-4">
         <h1 className="text-2xl font-semibold tracking-tight">Human in the Loop</h1>
         <p className="text-sm text-[var(--muted)] leading-relaxed">
-          Research anpassen, Brainstorm pflegen, Plan freigeben und exportieren.
+          Research anpassen, Brainstorm pflegen, Vorschläge für den nächsten Monat
+          einreichen, Plan freigeben und exportieren.
         </p>
         <PipelineStrip phase={props.phase} />
       </header>
@@ -96,6 +104,19 @@ export function HumanLoopView(props: HumanLoopViewProps) {
         <p className="text-sm text-[var(--muted)]">
           Zuerst Plan-Setup unter Account abschließen (mindestens bis Briefing).
         </p>
+      )}
+
+      {props.briefing && (
+        <MonthSuggestionPanel
+          briefing={props.briefing}
+          research={props.research}
+          zyklus={props.zyklus}
+          learnings={props.learnings}
+          planVersion={props.planVersion}
+          loading={props.loading}
+          onApplyToPlan={(v) => props.onApplyMonthSuggestion?.(v)}
+          onLogged={props.onMonthSuggestionLog}
+        />
       )}
 
       {props.zyklus && (

@@ -72,6 +72,27 @@ export interface MonthlyFeedbackVorschlag {
   prioritaet: "hoch" | "mittel" | "niedrig";
 }
 
+/** Human-in-the-Loop: Nutzer-Vorschlag für nächsten Monat / Plan v2 */
+export interface MonthSuggestionIntegration {
+  postingDay: number;
+  title: string;
+  hook: string;
+  bereich: Bereich;
+  format: VideoFormat;
+  platform: Platform;
+  begruendung: string;
+  ersetztTitel?: string;
+}
+
+export interface MonthSuggestionEvaluation {
+  sinnvoll: boolean;
+  begruendung: string;
+  score: number;
+  verbesserung?: string;
+  integration?: MonthSuggestionIntegration | null;
+  mock?: boolean;
+}
+
 export interface MonthlyFeedbackDocument {
   monat: string;
   nische: string;
