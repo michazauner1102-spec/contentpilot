@@ -1,5 +1,6 @@
 import { forceMockOnly } from "@/lib/demo/mockOnly";
 import { anthropicText } from "@/lib/llm/providers/anthropic";
+import { claudeCliResearch } from "@/lib/llm/providers/claudeCli";
 import { geminiText } from "@/lib/llm/providers/gemini";
 import { firecrawlSearch } from "@/lib/trends/firecrawlClient";
 
@@ -236,7 +237,21 @@ async function searchClaudeResearch(
   queries: string[]
 ): Promise<WebResearchResult | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
-  if (!apiKey) return null;
+
+  // Kein API-Key, aber CLI-Backend aktiv → echte Web-Recherche über die `claude` CLI (WebSearch).
+  if (!apiKey) {
+    const provider = (process.env.LLM_PROVIDER ?? "anthropic").toLowerCase();
+    if (provider !== "claude-cli") return null;
+    const model = process.env.LLM_MODEL?.trim() || "sonnet";
+    try {
+      const text = await claudeCliResearch(model, queries);
+      return text.trim()
+        ? { snippets: [text.trim()], source: "claude", providerUsed: "claude" }
+        : null;
+    } catch {
+      return null;
+    }
+  }
 
   const model =
     process.env.ANTHROPIC_MODEL?.trim() ||

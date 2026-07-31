@@ -71,6 +71,7 @@ export async function analyzeLoop(
   const bereiche: Bereich[] = ["reichweite", "vertrauen", "conversion"];
   const results: LoopLearnings[] = [];
 
+  // Sequenziell: parallele CLI-Calls werden vom Abo gedrosselt und dauern dadurch VIEL länger.
   for (const bereich of bereiche) {
     const videos = grouped[bereich] ?? [];
     const summary = summarizeBereich(bereich, videos);
