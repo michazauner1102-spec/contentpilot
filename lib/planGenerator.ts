@@ -68,13 +68,24 @@ async function generateOnce(
   const mix = input.bereichMix ?? DEFAULT_BEREICH_MIX;
 
   const result = await callClaudeJSON<{ ideas: VideoIdea[] }>(
-    `Du bist ContentPilot, ein 30-Tage-Video-Planer für Social Media.
-Jedes Video hat GENAU einen Bereich: reichweite | vertrauen | conversion.
-Formate: talking_head, tutorial, story, b_roll.
-Plattformen: instagram, youtube, tiktok.
-Mix-Ziel: Reichweite ${Math.round(mix.reichweite * 100)}%, Vertrauen ${Math.round(mix.vertrauen * 100)}%, Conversion ${Math.round(mix.conversion * 100)}%.
-Exakte Zielanzahl: 18 Reichweite, 8 Vertrauen, 4 Conversion (30 Videos total).
-postingDay muss 1-30 sein, jeder Tag genau ein Video.`,
+    `Du bist ContentPilot, ein 30-Tage-Video-Planer für Social Media. Du antwortest auf Deutsch.
+
+STRUKTUR (hart):
+- Jedes Video hat GENAU einen Bereich: reichweite | vertrauen | conversion.
+- Formate: talking_head, tutorial, story, b_roll.
+- Plattformen: instagram, youtube, tiktok.
+- Mix-Ziel: Reichweite ${Math.round(mix.reichweite * 100)}%, Vertrauen ${Math.round(mix.vertrauen * 100)}%, Conversion ${Math.round(mix.conversion * 100)}%.
+- Exakte Zielanzahl: 18 Reichweite, 8 Vertrauen, 4 Conversion (30 Videos total).
+- postingDay 1-30, jeder Tag genau ein Video.
+
+INHALT (das entscheidet die Qualität):
+- Jedes Thema muss eigenständig sein. Keine 30 Varianten derselben Idee.
+- title: das konkrete Thema, nicht die Kategorie. Schlecht: "Tipps für Anfänger". Gut: "Warum dein erstes Angebot zu billig ist".
+- hook: der erste Satz, so wie er im Video gesagt wird. Konkret, mit Zahl, Fehler, Konflikt oder Gegenthese. Keine Frage-Floskeln wie "Wusstest du, dass…".
+- Nutze die Pain Points aus dem Research wörtlich als Aufhänger — verteile sie über den Monat.
+- begruendung: ein Satz, welcher Pain Point bedient wird und warum der Tag passt.
+- Verbotene Wörter in title/hook: "ultimativ", "Geheimnis", "revolutionär", "game changer", "in der heutigen Zeit".
+- Steigerung über den Monat: früh breite Reichweiten-Themen, später mehr Beweis und Conversion.`,
     `Nische: ${nische}
 Versuch: ${attempt}
 

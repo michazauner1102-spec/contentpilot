@@ -9,6 +9,7 @@ import type {
 } from "@/lib/types";
 import type { BrainstormIdea } from "@/lib/brainstorm/contentPillars";
 import { PILLAR_META, STATUS_LABELS } from "@/lib/brainstorm/contentPillars";
+import { buildProductionTodos } from "@/lib/todos/productionTodos";
 
 export interface ContentExportBundle {
   exportedAt: string;
@@ -72,7 +73,9 @@ export function buildExportMarkdown(bundle: ContentExportBundle): string {
     lines.push("");
     for (const idea of bundle.brainstormIdeas) {
       const pillar = PILLAR_META[idea.pillar]?.title ?? idea.pillar;
-      lines.push(`### ${idea.title} (${pillar}) — ${STATUS_LABELS[idea.status]}`);
+      lines.push(
+        `### ${idea.title} (${pillar}) — ${STATUS_LABELS[idea.status]}`
+      );
       lines.push(`- Hook: ${idea.hook}`);
       lines.push(`- SuperHook: ${idea.superhook}`);
       lines.push(`- Format: ${idea.format}`);
@@ -102,21 +105,82 @@ export function buildExportMarkdown(bundle: ContentExportBundle): string {
   }
 
   if (bundle.zyklus) {
-    lines.push("## 30-Tage-Plan");
+    lines.push("## 30-Tage-Plan (Übersicht)");
     lines.push("");
     const sorted = [...bundle.zyklus.plan].sort(
       (a, b) => a.postingDay - b.postingDay
     );
     for (const v of sorted) {
       lines.push(
-        `### Tag ${v.postingDay} · ${BEREICH_LABELS[v.bereich]} · ${v.format}`
+        `- **Tag ${v.postingDay}** · ${BEREICH_LABELS[v.bereich]} · ${v.format} — ${v.title}`
+      );
+    }
+    lines.push("");
+
+    lines.push("## Skripte & Produktion pro Tag");
+    lines.push("");
+    for (const v of sorted) {
+      lines.push(
+        `### Tag ${v.postingDay} · ${v.title}`
       );
       lines.push("");
-      lines.push(`**${v.title}**`);
+      lines.push(
+        `_${BEREICH_LABELS[v.bereich]} · ${v.format} · ${v.platform}_`
+      );
       lines.push("");
-      lines.push(`Hook: ${v.hook}`);
+      lines.push(`**Hook-Idee:** ${v.hook}`);
       lines.push("");
-      lines.push(`_${v.begruendung}_`);
+      if (v.begruendung) lines.push(`*${v.begruendung}*`);
+      lines.push("");
+      if (v.skript?.hook?.trim()) {
+        lines.push("#### Skript");
+        lines.push("");
+        lines.push(`**Hook:** ${v.skript.hook}`);
+        lines.push("");
+        lines.push(v.skript.body);
+        lines.push("");
+        lines.push(`**CTA:** ${v.skript.cta}`);
+        lines.push("");
+      } else {
+        lines.push("_Skript noch nicht generiert._");
+        lines.push("");
+      }
+      if (v.grafikVorschlag?.trim()) {
+        lines.push("#### Grafik / Thumbnail");
+        lines.push("");
+        lines.push(v.grafikVorschlag);
+        lines.push("");
+      }
+      if (v.drehAnleitung?.length) {
+        lines.push("#### Dreh-Anleitung");
+        lines.push("");
+        for (const s of v.drehAnleitung) {
+          lines.push(
+            `- ${s.setting} · ${s.einstellungsgroesse}: ${s.inhalt} (${s.ungefaehreDauerSekunden}s)`
+          );
+        }
+        lines.push("");
+      }
+      if (v.referenzVideoUrl || v.referenzBegruendung) {
+        lines.push("#### Referenz");
+        lines.push("");
+        if (v.referenzVideoUrl) lines.push(v.referenzVideoUrl);
+        if (v.referenzBegruendung) lines.push(v.referenzBegruendung);
+        lines.push("");
+      }
+    }
+
+    const todos = buildProductionTodos(sorted, bundle.productionGuide);
+    if (todos.length) {
+      lines.push("## Produktions-Checkliste");
+      lines.push("");
+      for (const t of todos) {
+        if (t.kind === "batch") {
+          lines.push(`- ℹ️ ${t.label}: ${t.detail}`);
+        } else {
+          lines.push(`- [ ] **${t.label}** — ${t.detail}`);
+        }
+      }
       lines.push("");
     }
   }
@@ -167,11 +231,57 @@ export function buildExportPlainText(bundle: ContentExportBundle): string {
     .replace(/_/g, "");
 }
 
+/** Nur Drehplan + Skripte — für den Drehtag. */
+export function buildShootDayExport(bundle: ContentExportBundle): string {
+  if (!bundle.zyklus) return "Kein Plan.";
+  const lines: string[] = ["# Drehtag — ContentPilot", ""];
+  const sorted = [...bundle.zyklus.plan].sort(
+    (a, b) => a.postingDay - b.postingDay
+  );
+  const todos = buildProductionTodos(sorted, bundle.productionGuide).filter(
+    (t) => t.kind === "dreh"
+  );
+  if (todos.length) {
+    lines.push("## Geplante Drehs");
+    lines.push("");
+    for (const t of todos) lines.push(`- ${t.label}: ${t.detail}`);
+    lines.push("");
+  }
+  for (const v of sorted) {
+    if (!v.skript?.body?.trim() && !v.drehAnleitung?.length) continue;
+    lines.push(`## Tag ${v.postingDay} — ${v.title}`);
+    lines.push("");
+    if (v.skript?.hook) {
+      lines.push(`Hook: ${v.skript.hook}`);
+      lines.push("");
+      lines.push(v.skript.body);
+      lines.push("");
+      lines.push(`CTA: ${v.skript.cta}`);
+      lines.push("");
+    }
+    if (v.grafikVorschlag) {
+      lines.push(`Grafik: ${v.grafikVorschlag}`);
+      lines.push("");
+    }
+    for (const s of v.drehAnleitung ?? []) {
+      lines.push(
+        `- ${s.setting} / ${s.einstellungsgroesse}: ${s.inhalt} (${s.ungefaehreDauerSekunden}s)`
+      );
+    }
+    lines.push("");
+  }
+  return lines.join("\n");
+}
+
 export function exportFilename(
   briefing: ContentBriefing | null,
   ext: "md" | "json" | "txt"
 ): string {
-  const slug = (briefing?.praezisierteNische || briefing?.nische || "contentpilot")
+  const slug = (
+    briefing?.praezisierteNische ||
+    briefing?.nische ||
+    "contentpilot"
+  )
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .slice(0, 40);

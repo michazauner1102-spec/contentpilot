@@ -47,8 +47,8 @@ export const APP_MENU: { id: AppMenuId; label: string; description: string }[] =
     },
     {
       id: "todos",
-      label: "Aufnahme-To-dos",
-      description: "Dreh-Wochen & Checkliste",
+      label: "Produktions-To-dos",
+      description: "Dreh, Skript & Grafik",
     },
     {
       id: "hitl",

@@ -3,7 +3,8 @@
 import { useMemo, useState, useEffect, type ReactNode } from "react";
 import type { ProductionGuide, VideoDetails } from "@/lib/types";
 import { BEREICH_LABELS } from "@/lib/types";
-import { BTN_PRIMARY, bereichDotClass, bereichMutedClass } from "@/lib/ui/theme";
+import { PostAssistChat } from "@/components/hitl/PostAssistChat";
+import { BTN_PRIMARY, BTN_SECONDARY, INPUT_FIELD, bereichDotClass, bereichMutedClass } from "@/lib/ui/theme";
 
 const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -196,6 +197,9 @@ interface DayDetailDrawerProps {
     options?: { force?: boolean }
   ) => void;
   loading?: boolean;
+  briefing?: import("@/lib/types").ContentBriefing | null;
+  research?: import("@/lib/types").ResearchResult | null;
+  onPatchVideo?: (updated: VideoDetails) => void;
 }
 
 function ScriptBlock({
@@ -220,18 +224,28 @@ export function DayDetailDrawer({
   onClose,
   onLoadDetail,
   loading,
+  briefing,
+  research,
+  onPatchVideo,
 }: DayDetailDrawerProps) {
   const [scriptPanelOpen, setScriptPanelOpen] = useState(false);
+  const [editHook, setEditHook] = useState("");
+  const [editTitle, setEditTitle] = useState("");
 
   useEffect(() => {
     setScriptPanelOpen(false);
-  }, [video?.id]);
+    setEditHook(video?.hook ?? "");
+    setEditTitle(video?.title ?? "");
+  }, [video?.id, video?.hook, video?.title]);
 
   if (!video) return null;
 
   const hasScript = Boolean(video.skript?.hook?.trim());
   const hasBilder = Boolean(video.grafikVorschlag?.trim());
   const showGenerating = loading;
+  const dirty =
+    editHook.trim() !== (video.hook ?? "") ||
+    editTitle.trim() !== (video.title ?? "");
 
   const requestScript = () => {
     setScriptPanelOpen(true);
@@ -243,6 +257,15 @@ export function DayDetailDrawer({
   const closeAll = () => {
     setScriptPanelOpen(false);
     onClose();
+  };
+
+  const saveManual = () => {
+    if (!onPatchVideo) return;
+    onPatchVideo({
+      ...video,
+      title: editTitle.trim() || video.title,
+      hook: editHook.trim() || video.hook,
+    });
   };
 
   return (
@@ -330,10 +353,45 @@ export function DayDetailDrawer({
           <h3 className="text-xs uppercase tracking-wider text-[var(--muted)]">
             Inhaltsvorschlag
           </h3>
-          <p className="text-sm leading-relaxed text-[var(--foreground)]">
-            {video.hook}
-          </p>
-          <p className="text-sm text-[var(--muted)]">{video.begruendung}</p>
+          {onPatchVideo ? (
+            <div className="space-y-2">
+              <label className="block text-[10px] uppercase tracking-wider text-[var(--muted)]">
+                Titel
+                <input
+                  className={`${INPUT_FIELD} mt-1 text-sm py-2`}
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                />
+              </label>
+              <label className="block text-[10px] uppercase tracking-wider text-[var(--muted)]">
+                Hook / Idee
+                <textarea
+                  className={`${INPUT_FIELD} mt-1 text-sm py-2 min-h-[72px]`}
+                  value={editHook}
+                  onChange={(e) => setEditHook(e.target.value)}
+                />
+              </label>
+              {dirty && (
+                <button
+                  type="button"
+                  onClick={saveManual}
+                  className={`${BTN_SECONDARY} text-xs py-1.5 px-3`}
+                >
+                  Manuelle Änderung speichern
+                </button>
+              )}
+              {video.begruendung?.trim() && (
+                <p className="text-sm text-[var(--muted)]">{video.begruendung}</p>
+              )}
+            </div>
+          ) : (
+            <>
+              <p className="text-sm leading-relaxed text-[var(--foreground)]">
+                {video.hook}
+              </p>
+              <p className="text-sm text-[var(--muted)]">{video.begruendung}</p>
+            </>
+          )}
           {onLoadDetail && (
             <button
               type="button"
@@ -356,6 +414,15 @@ export function DayDetailDrawer({
             </p>
           )}
         </section>
+
+        {onPatchVideo && (
+          <PostAssistChat
+            video={video}
+            briefing={briefing}
+            research={research}
+            onApplyPatch={onPatchVideo}
+          />
+        )}
 
         {(hasBilder || showGenerating) && (
           <section className="space-y-2">

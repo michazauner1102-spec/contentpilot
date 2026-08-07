@@ -7,8 +7,23 @@ export interface LlmConfig {
   model: string;
 }
 
+/** Ohne LLM_PROVIDER entscheidet der vorhandene Key — ein Key genügt zum Start. */
+function detectProvider(): LlmProviderId {
+  const explicit = process.env.LLM_PROVIDER?.trim().toLowerCase();
+  if (explicit) return explicit as LlmProviderId;
+  if (process.env.ANTHROPIC_API_KEY?.trim()) return "anthropic";
+  if (process.env.OPENAI_API_KEY?.trim()) return "openai";
+  if (
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY?.trim() ||
+    process.env.GEMINI_API_KEY?.trim()
+  ) {
+    return "gemini";
+  }
+  return "anthropic";
+}
+
 export function getLlmConfig(): LlmConfig {
-  const provider = (process.env.LLM_PROVIDER ?? "anthropic").toLowerCase() as LlmProviderId;
+  const provider = detectProvider();
   if (
     provider !== "anthropic" &&
     provider !== "gemini" &&
@@ -27,11 +42,16 @@ export function getLlmConfig(): LlmConfig {
     "claude-cli": "sonnet",
   };
 
+  const providerModel: Record<LlmProviderId, string | undefined> = {
+    anthropic: process.env.ANTHROPIC_MODEL,
+    gemini: process.env.GEMINI_MODEL,
+    openai: process.env.OPENAI_MODEL,
+    "claude-cli": process.env.LLM_MODEL,
+  };
+
   const model =
     process.env.LLM_MODEL?.trim() ||
-    process.env.ANTHROPIC_MODEL?.trim() ||
-    process.env.GEMINI_MODEL?.trim() ||
-    process.env.OPENAI_MODEL?.trim() ||
+    providerModel[provider]?.trim() ||
     defaults[provider];
 
   return { provider, model };

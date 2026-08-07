@@ -2,9 +2,9 @@
 
 import {
   SpaciousCalendar,
-  RecordingTodoList,
   DayDetailDrawer,
 } from "@/components/account/AccountView";
+import { ProductionTodoList } from "@/components/account/ProductionTodoList";
 import type { ProductionGuide, VideoDetails, Zyklus } from "@/lib/types";
 
 interface AccountScreenProps {
@@ -58,12 +58,12 @@ export function AccountScreen({
           onSelectDay={onSelectVideo}
           selectedDay={selectedDay}
         />
-        <RecordingTodoList
+        <ProductionTodoList
           plan={zyklus.plan}
           productionGuide={productionGuide}
           onSelectDay={onSelectVideo}
-          recordedIds={recordedIds}
-          onToggleRecorded={onToggleRecorded}
+          doneIds={recordedIds}
+          onToggleDone={onToggleRecorded}
         />
       </div>
       <DayDetailDrawer

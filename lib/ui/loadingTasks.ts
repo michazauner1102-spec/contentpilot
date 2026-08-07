@@ -10,7 +10,9 @@ export type LoadingTaskId =
   | "monthPlan"
   | "notion"
   | "brainstorm"
-  | "trends";
+  | "trends"
+  | "accountSwitch"
+  | "scriptsBatch";
 
 export interface LoadingTaskMeta {
   label: string;
@@ -91,6 +93,18 @@ export const LOADING_TASKS: Record<LoadingTaskId, LoadingTaskMeta> = {
     hint: "Web-Recherche & KI-Entwürfe",
     minSec: 20,
     maxSec: 55,
+  },
+  accountSwitch: {
+    label: "Plan wird geladen",
+    hint: "Stand vom Server holen",
+    minSec: 1,
+    maxSec: 4,
+  },
+  scriptsBatch: {
+    label: "Alle Skripte werden geschrieben",
+    hint: "30 Videos: Hook, Inhalt, CTA & Drehplan",
+    minSec: 180,
+    maxSec: 600,
   },
 };
 

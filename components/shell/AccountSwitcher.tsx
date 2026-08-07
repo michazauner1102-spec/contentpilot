@@ -11,7 +11,7 @@ interface AccountSwitcherProps {
   onCreate: () => void;
   onRename: (accountId: string, name: string) => void;
   onDelete: (accountId: string) => void;
-  onRefresh?: () => void;
+  saveState?: "idle" | "saving" | "error";
 }
 
 export function AccountSwitcher({
@@ -21,7 +21,7 @@ export function AccountSwitcher({
   onCreate,
   onRename,
   onDelete,
-  onRefresh,
+  saveState = "idle",
 }: AccountSwitcherProps) {
   const [open, setOpen] = useState(false);
   const active = accounts.find((a) => a.id === activeId);
@@ -31,7 +31,9 @@ export function AccountSwitcher({
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">
-            Account
+            Plan
+            {saveState === "saving" && " · sichern…"}
+            {saveState === "error" && " · nicht gespeichert"}
           </p>
           <p className="text-sm font-medium truncate" title={active?.name}>
             {active?.name ?? "—"}
@@ -40,10 +42,7 @@ export function AccountSwitcher({
         <button
           type="button"
           className="text-xs text-[var(--muted-strong)] hover:text-[var(--foreground)] shrink-0"
-          onClick={() => {
-            onRefresh?.();
-            setOpen((o) => !o);
-          }}
+          onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
         >
           {open ? "▲" : "▼"}

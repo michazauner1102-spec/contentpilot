@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   videoIdeaToMeta,
   type ContentBriefing,
@@ -56,19 +56,14 @@ import {
   type FlowStateSetters,
 } from "@/lib/accounts/applyFlowState";
 import {
-  createAccountRecord,
-  deleteAccountRecord,
+  deriveAccountName,
   emptyPersistedFlow,
-  ensureAccountsRegistry,
-  loadFlowForAccount,
-  removeFlowForAccount,
-  renameAccountRecord,
-  saveFlowForAccount,
-  setActiveAccountInRegistry,
   type AccountMeta,
   type FlowPhase,
   type PersistedFlow,
 } from "@/lib/accounts/flowPersistence";
+import * as accountsApi from "@/lib/accounts/accountsClient";
+import type { SessionUser } from "@/lib/accounts/accountsClient";
 
 const emptyAnswers: WizardAnswers = {
   zielgruppeDetail: "",
@@ -134,6 +129,12 @@ export function ContentFlowApp() {
   const [hydrated, setHydrated] = useState(false);
   const [activeAccountId, setActiveAccountId] = useState("");
   const [accountList, setAccountList] = useState<AccountMeta[]>([]);
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "error">("idle");
+  const [scriptProgress, setScriptProgress] = useState<{
+    done: number;
+    total: number;
+  } | null>(null);
 
   const flowSetters: FlowStateSetters = useMemo(
     () => ({
@@ -260,35 +261,109 @@ export function ContentFlowApp() {
       ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]
     );
 
-  // Hydration erst nach dem Mount, damit Server- und Client-Markup identisch bleiben.
-  /* eslint-disable react-hooks/set-state-in-effect */
+  // Session und Plan werden erst nach dem Mount geladen, damit Server- und
+  // Client-Markup identisch bleiben.
   useEffect(() => {
-    try {
-      const registry = ensureAccountsRegistry();
-      setActiveAccountId(registry.activeId);
-      setAccountList(registry.accounts);
-      const flow =
-        loadFlowForAccount(registry.activeId) ?? emptyPersistedFlow();
-      applyPersistedFlow(flow, flowSetters);
-    } catch {
-      /* beschädigter Stand wird ignoriert */
-    }
-    setHydrated(true);
+    let cancelled = false;
+    void (async () => {
+      try {
+        const session = await accountsApi.fetchSession();
+        if (cancelled) return;
+        setSessionUser(session.user);
+        setAccountList(session.accounts);
+        if (session.activeAccountId) {
+          setActiveAccountId(session.activeAccountId);
+          const flow = await accountsApi.loadFlow(session.activeAccountId);
+          if (cancelled) return;
+          applyPersistedFlow(flow ?? emptyPersistedFlow(), flowSetters);
+        }
+      } catch {
+        /* Ohne Session bleibt der leere Startzustand stehen. */
+      } finally {
+        if (!cancelled) setHydrated(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [flowSetters]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
+  // Speichern gebündelt: der Flow ändert sich bei jedem Tastendruck, der Server
+  // soll aber nicht pro Zeichen einen Request sehen.
+  const snapshotRef = useRef<PersistedFlow | null>(null);
+  const lastSavedRef = useRef<string>("");
   useEffect(() => {
     if (!hydrated || !activeAccountId) return;
     const snapshot = buildFlowSnapshot();
-    try {
-      saveFlowForAccount(activeAccountId, snapshot);
-    } catch {
-      /* Quota o. Ä. — Demo läuft trotzdem weiter */
-    }
+    snapshotRef.current = snapshot;
+
+    const serialized = JSON.stringify(snapshot);
+    if (serialized === lastSavedRef.current) return;
+
+    const timer = window.setTimeout(() => {
+      setSaveState("saving");
+      accountsApi
+        .saveFlow(activeAccountId, snapshot)
+        .then((workspace) => {
+          lastSavedRef.current = serialized;
+          setSaveState("idle");
+          setAccountList((prev) =>
+            prev.map((a) => (a.id === workspace.id ? workspace : a))
+          );
+        })
+        .catch(() => setSaveState("error"));
+    }, 900);
+
+    return () => window.clearTimeout(timer);
+  }, [hydrated, activeAccountId, buildFlowSnapshot]);
+
+  // Beim Verlassen des Tabs den letzten Stand noch wegschicken.
+  useEffect(() => {
+    if (!hydrated || !activeAccountId) return;
+    const flush = () => {
+      const snapshot = snapshotRef.current;
+      if (!snapshot) return;
+      const serialized = JSON.stringify(snapshot);
+      if (serialized === lastSavedRef.current) return;
+      navigator.sendBeacon?.(
+        `/api/workspaces/${activeAccountId}/flow?beacon=1`,
+        new Blob([JSON.stringify({ flow: snapshot })], {
+          type: "application/json",
+        })
+      );
+    };
+    window.addEventListener("pagehide", flush);
+    return () => window.removeEventListener("pagehide", flush);
+  }, [hydrated, activeAccountId]);
+
+  // Sobald ein Briefing steht, bekommt der Plan statt „Neuer Plan" die Nische als Namen.
+  const activeAccount = accountList.find((a) => a.id === activeAccountId);
+  const activeAccountName = activeAccount?.name;
+  useEffect(() => {
+    if (!hydrated || !activeAccountId || !activeAccountName) return;
+    const isDefaultName =
+      activeAccountName === "Neuer Plan" ||
+      activeAccountName === "Mein erster Plan";
+    if (!isDefaultName) return;
+
+    const derived = deriveAccountName({ briefing, nische, calendars });
+    if (derived === "Neuer Plan" || derived === activeAccountName) return;
+
+    void accountsApi
+      .renameAccount(activeAccountId, derived)
+      .then((workspace) =>
+        setAccountList((prev) =>
+          prev.map((a) => (a.id === workspace.id ? workspace : a))
+        )
+      )
+      .catch(() => {});
   }, [
     hydrated,
     activeAccountId,
-    buildFlowSnapshot,
+    activeAccountName,
+    briefing,
+    nische,
+    calendars,
   ]);
 
   const pushProgress = useCallback(
@@ -391,6 +466,8 @@ export function ContentFlowApp() {
           body: JSON.stringify({
             videoIdea,
             research: research ?? undefined,
+            briefing: briefing ?? undefined,
+            referenzen: creatorSuggestion?.referenzVideos ?? [],
             forceRegenerate: force,
           }),
         });
@@ -403,8 +480,74 @@ export function ContentFlowApp() {
         setDetailLoading(false);
       }
     },
-    [research, patchPlanVideo]
+    [research, briefing, creatorSuggestion, patchPlanVideo]
   );
+
+  /** Alle noch leeren Videos des aktiven Monats ausarbeiten — paketweise mit Fortschritt. */
+  const generateAllScripts = useCallback(async () => {
+    if (!zyklus) return;
+    const offen = zyklus.plan.filter(
+      (v) => !v.skript?.body?.trim() || !v.drehAnleitung?.length
+    );
+    if (!offen.length) {
+      pushProgress("Skripte", "Alle Videos sind schon ausgearbeitet");
+      return;
+    }
+
+    setLoading(true);
+    setLoadingTask("scriptsBatch");
+    setScriptProgress({ done: 0, total: offen.length });
+    setError(null);
+
+    const CHUNK = 6;
+    let done = 0;
+    let failed = 0;
+    try {
+      for (let i = 0; i < offen.length; i += CHUNK) {
+        const chunk = offen.slice(i, i + CHUNK);
+        const res = await fetch("/api/plan/scripts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            videoIdeas: chunk,
+            research: research ?? undefined,
+            briefing: briefing ?? undefined,
+            referenzen: creatorSuggestion?.referenzVideos ?? [],
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        for (const details of (data.details ?? []) as VideoDetails[]) {
+          if (details.skript?.body?.trim()) patchPlanVideo(details);
+        }
+        failed += (data.failures ?? []).length;
+        done += chunk.length;
+        setScriptProgress({ done, total: offen.length });
+      }
+
+      pushProgress(
+        "Skripte",
+        failed
+          ? `${done - failed} von ${offen.length} Videos ausgearbeitet, ${failed} fehlgeschlagen`
+          : `Alle ${done} Videos ausgearbeitet`
+      );
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Skript-Generierung fehlgeschlagen"
+      );
+    } finally {
+      setLoading(false);
+      setScriptProgress(null);
+    }
+  }, [
+    zyklus,
+    research,
+    briefing,
+    creatorSuggestion,
+    patchPlanVideo,
+    pushProgress,
+  ]);
 
   const selectVideo = useCallback(
     (video: VideoDetails) => {
@@ -737,66 +880,115 @@ export function ContentFlowApp() {
     setShowSetup(false);
   };
 
+  /** Aktuellen Stand sofort sichern — vor jedem Wechsel des Plans. */
+  const flushFlow = useCallback(async () => {
+    if (!hydrated || !activeAccountId) return;
+    const snapshot = buildFlowSnapshot();
+    try {
+      await accountsApi.saveFlow(activeAccountId, snapshot);
+      lastSavedRef.current = JSON.stringify(snapshot);
+    } catch {
+      /* Wechsel soll auch bei Speicherfehler möglich bleiben */
+    }
+  }, [hydrated, activeAccountId, buildFlowSnapshot]);
+
   const switchAccount = useCallback(
     (nextId: string) => {
       if (!hydrated || !activeAccountId || nextId === activeAccountId) return;
-      try {
-        saveFlowForAccount(activeAccountId, buildFlowSnapshot());
-      } catch {
-        /* ignorieren */
-      }
-      const registry = setActiveAccountInRegistry(nextId);
-      setAccountList(registry.accounts);
-      setActiveAccountId(nextId);
-      const flow = loadFlowForAccount(nextId) ?? emptyPersistedFlow();
-      applyPersistedFlow(flow, flowSetters);
+      void (async () => {
+        setLoading(true);
+        setLoadingTask("accountSwitch");
+        await flushFlow();
+        try {
+          const flow = await accountsApi.loadFlow(nextId);
+          setActiveAccountId(nextId);
+          applyPersistedFlow(flow ?? emptyPersistedFlow(), flowSetters);
+          lastSavedRef.current = JSON.stringify(flow ?? emptyPersistedFlow());
+        } catch (e) {
+          setError(e instanceof Error ? e.message : "Plan-Wechsel fehlgeschlagen");
+        } finally {
+          setLoading(false);
+        }
+      })();
     },
-    [hydrated, activeAccountId, buildFlowSnapshot, flowSetters]
+    [hydrated, activeAccountId, flushFlow, flowSetters]
   );
 
   const createAccount = useCallback(() => {
     if (!hydrated || !activeAccountId) return;
-    try {
-      saveFlowForAccount(activeAccountId, buildFlowSnapshot());
-    } catch {
-      /* ignorieren */
-    }
-    const { registry, accountId } = createAccountRecord();
-    setAccountList(registry.accounts);
-    setActiveAccountId(accountId);
-    applyPersistedFlow(emptyPersistedFlow(), flowSetters);
-    setMenu("calendar");
-  }, [hydrated, activeAccountId, buildFlowSnapshot, flowSetters]);
+    void (async () => {
+      setLoading(true);
+      setLoadingTask("accountSwitch");
+      await flushFlow();
+      try {
+        const workspace = await accountsApi.createAccount();
+        setAccountList((prev) => [...prev, workspace]);
+        setActiveAccountId(workspace.id);
+        const fresh = emptyPersistedFlow();
+        applyPersistedFlow(fresh, flowSetters);
+        lastSavedRef.current = JSON.stringify(fresh);
+        setMenu("calendar");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Plan konnte nicht angelegt werden");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [hydrated, activeAccountId, flushFlow, flowSetters]);
 
   const renameAccount = useCallback((accountId: string, name: string) => {
-    const registry = renameAccountRecord(accountId, name);
-    setAccountList(registry.accounts);
+    void accountsApi
+      .renameAccount(accountId, name)
+      .then((workspace) =>
+        setAccountList((prev) =>
+          prev.map((a) => (a.id === workspace.id ? workspace : a))
+        )
+      )
+      .catch((e: unknown) =>
+        setError(e instanceof Error ? e.message : "Umbenennen fehlgeschlagen")
+      );
   }, []);
 
   const deleteAccount = useCallback(
     (accountId: string) => {
-      const registry = deleteAccountRecord(accountId);
-      if (!registry) return;
-      setAccountList(registry.accounts);
-      setActiveAccountId(registry.activeId);
-      const flow =
-        loadFlowForAccount(registry.activeId) ?? emptyPersistedFlow();
-      applyPersistedFlow(flow, flowSetters);
+      void (async () => {
+        setLoading(true);
+        setLoadingTask("accountSwitch");
+        try {
+          const { accounts, activeAccountId: nextId } =
+            await accountsApi.deleteAccount(accountId);
+          setAccountList(accounts);
+          if (nextId) {
+            setActiveAccountId(nextId);
+            const flow = await accountsApi.loadFlow(nextId);
+            applyPersistedFlow(flow ?? emptyPersistedFlow(), flowSetters);
+            lastSavedRef.current = JSON.stringify(flow ?? emptyPersistedFlow());
+          }
+        } catch (e) {
+          setError(e instanceof Error ? e.message : "Löschen fehlgeschlagen");
+        } finally {
+          setLoading(false);
+        }
+      })();
     },
     [flowSetters]
   );
 
   const resetFlow = () => {
     if (!activeAccountId) return;
-    try {
-      removeFlowForAccount(activeAccountId);
-    } catch {
-      /* ignorieren */
-    }
-    applyPersistedFlow(emptyPersistedFlow(), flowSetters);
-    const registry = ensureAccountsRegistry();
-    setAccountList(registry.accounts);
+    const fresh = emptyPersistedFlow();
+    applyPersistedFlow(fresh, flowSetters);
+    void accountsApi.saveFlow(activeAccountId, fresh).catch(() => {});
+    lastSavedRef.current = JSON.stringify(fresh);
   };
+
+  const signOut = useCallback(() => {
+    void (async () => {
+      await flushFlow();
+      await accountsApi.logout().catch(() => {});
+      window.location.href = "/login";
+    })();
+  }, [flushFlow]);
 
   const selectCalendar = useCallback((id: string) => {
     setActiveCalendarId(id);
@@ -892,7 +1084,12 @@ export function ContentFlowApp() {
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      {showLoadingOverlay && <LoadingIndicator taskId={activeLoadingTask} />}
+      {showLoadingOverlay && (
+        <LoadingIndicator
+          taskId={activeLoadingTask}
+          progress={scriptProgress}
+        />
+      )}
       <div
         className={`flex flex-col lg:flex-row gap-10 mx-auto px-6 py-10 ${
           shellWide ? "max-w-[min(100%,1800px)]" : "max-w-7xl"
@@ -911,9 +1108,9 @@ export function ContentFlowApp() {
           onCreateAccount={createAccount}
           onRenameAccount={renameAccount}
           onDeleteAccount={deleteAccount}
-          onRefreshAccounts={() =>
-            setAccountList(ensureAccountsRegistry().accounts)
-          }
+          user={sessionUser}
+          onSignOut={signOut}
+          saveState={saveState}
         />
 
         <div className="flex-1 min-w-0 relative min-h-[60vh] space-y-6">
@@ -945,6 +1142,10 @@ export function ContentFlowApp() {
                 importSourceLabel={planImportLabel}
                 onImportSchedule={applyImportedSchedule}
                 onImportLog={(msg) => pushProgress("Import", msg)}
+                onGenerateAllScripts={() => void generateAllScripts()}
+                briefing={briefing}
+                research={research}
+                onPatchVideo={patchPlanVideo}
               />
             ) : (
               <AccountEmpty onStart={openSetup} />

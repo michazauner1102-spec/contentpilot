@@ -97,10 +97,11 @@ export function MonthSuggestionPanel({
   return (
     <section className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
       <div>
-        <h2 className="font-semibold">Vorschläge für den nächsten Monat</h2>
+        <h2 className="font-semibold">Eigene Ideen einbringen</h2>
         <p className="text-sm text-[var(--muted)] mt-1 leading-relaxed">
-          Beschreibe eine Idee für Plan v2 — die KI prüft Passung zu Nische, Mix und
-          Learnings und kann sie in den Kalender übernehmen.
+          Du kannst jederzeit Themen, Hooks oder Formate vorschlagen. Die KI
+          bewertet den Fit und baut sinnvolle Vorschläge in den Plan ein — du
+          entscheidest, ob übernommen wird.
         </p>
       </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { RecordingTodoList } from "@/components/account/AccountView";
+import { ProductionTodoList } from "@/components/account/ProductionTodoList";
 import type { ProductionGuide, VideoDetails, Zyklus } from "@/lib/types";
 
 interface TodosPageProps {
@@ -21,17 +21,20 @@ export function TodosPage({
   return (
     <div className="space-y-8 max-w-2xl">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Aufnahme-To-dos</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Produktions-To-dos
+        </h1>
         <p className="text-sm text-[var(--muted)] mt-1">
-          Nach Wochen sortiert — abhaken und Eintrag öffnet Tag-Details im Kalender.
+          Nur geplante Arbeit: Drehtage, fehlende Skripte und Grafiken — nicht
+          ein Eintrag pro Posting-Tag.
         </p>
       </header>
-      <RecordingTodoList
+      <ProductionTodoList
         plan={zyklus.plan}
         productionGuide={productionGuide}
         onSelectDay={onSelectDay}
-        recordedIds={recordedIds}
-        onToggleRecorded={onToggleRecorded}
+        doneIds={recordedIds}
+        onToggleDone={onToggleRecorded}
       />
       {productionGuide && (
         <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-sm">

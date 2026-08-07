@@ -18,3 +18,10 @@ services:
         value: "true"
       - key: INSIGHTS_MODE
         value: mock
+      # Login braucht ein Session-Secret — Render generiert es selbst.
+      - key: SESSION_SECRET
+        generateValue: true
+      # Ohne DATABASE_URL liegen Accounts in einer Datei und sind nach jedem
+      # Deploy weg. Für echten Betrieb im Dashboard eine Postgres-URL setzen.
+      # - key: DATABASE_URL
+      #   sync: false

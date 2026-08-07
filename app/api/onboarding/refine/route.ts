@@ -3,10 +3,14 @@ import { refineBriefing } from "@/lib/onboarding/briefing";
 import { mockBriefing } from "@/lib/demo/flowMock";
 import { aiRouteFailure } from "@/lib/demo/apiFallback";
 import type { CreatorReferenceSuggestion, WizardAnswers } from "@/lib/types";
+import { requireUser } from "@/lib/auth/dal";
 
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
+  const auth = await requireUser();
+  if (auth.response) return auth.response;
+
   try {
     const body = (await req.json()) as {
       nische?: string;

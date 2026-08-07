@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { researchNische } from "@/lib/research";
+import { requireUser } from "@/lib/auth/dal";
 
-export const maxDuration = 60;
+export const maxDuration = 180;
 
 export async function POST(req: Request) {
+  const auth = await requireUser();
+  if (auth.response) return auth.response;
+
   try {
     const { nische } = (await req.json()) as { nische?: string };
     if (!nische?.trim()) {

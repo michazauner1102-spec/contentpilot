@@ -63,8 +63,9 @@ export function HumanLoopView(props: HumanLoopViewProps) {
       <header className="space-y-4">
         <h1 className="text-2xl font-semibold tracking-tight">Human in the Loop</h1>
         <p className="text-sm text-[var(--muted)] leading-relaxed">
-          Research anpassen, Brainstorm pflegen, Vorschläge für den nächsten Monat
-          einreichen, Plan freigeben und exportieren.
+          Research anpassen, Brainstorm pflegen, eigene Post-Ideen vorschlagen,
+          Plan freigeben und exportieren. Im Kalender kannst du jeden Post per
+          KI-Chat feinjustieren.
         </p>
         <PipelineStrip phase={props.phase} />
       </header>

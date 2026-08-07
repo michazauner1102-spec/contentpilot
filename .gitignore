@@ -10,6 +10,9 @@
 .env.local
 .env*.local
 
+# lokale Accounts/Pläne ohne Datenbank
+/.data/
+
 # debug
 npm-debug.log*
 .DS_Store

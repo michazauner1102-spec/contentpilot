@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { generateBrainstormIdeas } from "@/lib/brainstorm/generateIdeas";
 import type { ContentBriefing } from "@/lib/types";
+import { requireUser } from "@/lib/auth/dal";
 
 export const maxDuration = 90;
 
 export async function POST(req: Request) {
+  const auth = await requireUser();
+  if (auth.response) return auth.response;
+
   try {
     const body = (await req.json()) as { briefing?: ContentBriefing };
     if (!body.briefing) {

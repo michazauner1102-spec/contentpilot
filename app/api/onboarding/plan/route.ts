@@ -4,10 +4,14 @@ import { findReferenzVideos } from "@/lib/references";
 import { ideasToPlan, type ContentBriefing, type ResearchResult } from "@/lib/types";
 import { mockZyklusFromBriefing } from "@/lib/demo/flowMock";
 import { aiRouteFailure } from "@/lib/demo/apiFallback";
+import { requireUser } from "@/lib/auth/dal";
 
-export const maxDuration = 180;
+export const maxDuration = 240;
 
 export async function POST(req: Request) {
+  const auth = await requireUser();
+  if (auth.response) return auth.response;
+
   try {
     const body = (await req.json()) as {
       briefing?: ContentBriefing;

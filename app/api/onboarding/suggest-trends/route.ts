@@ -2,10 +2,14 @@ import { NextResponse } from "next/server";
 import { draftTrendSuggestions } from "@/lib/trends/draftSuggestions";
 import { parseWebResearchProvider } from "@/lib/research/webResearchProviders";
 import type { WizardAnswerKey } from "@/lib/onboarding/wizardQuestions";
+import { requireUser } from "@/lib/auth/dal";
 
 export const maxDuration = 90;
 
 export async function POST(req: Request) {
+  const auth = await requireUser();
+  if (auth.response) return auth.response;
+
   try {
     const body = (await req.json()) as {
       nische?: string;

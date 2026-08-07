@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { importExternalSchedule } from "@/lib/plan/importExternalSchedule";
+import { requireUser } from "@/lib/auth/dal";
 
 export async function POST(req: Request) {
+  const auth = await requireUser();
+  if (auth.response) return auth.response;
+
   try {
     const body = (await req.json()) as {
       content?: string;

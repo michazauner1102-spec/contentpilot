@@ -17,7 +17,9 @@ interface AppSidebarProps {
   onCreateAccount?: () => void;
   onRenameAccount?: (id: string, name: string) => void;
   onDeleteAccount?: (id: string) => void;
-  onRefreshAccounts?: () => void;
+  user?: { email: string; name: string } | null;
+  onSignOut?: () => void;
+  saveState?: "idle" | "saving" | "error";
 }
 
 export function AppSidebar({
@@ -31,7 +33,9 @@ export function AppSidebar({
   onCreateAccount,
   onRenameAccount,
   onDeleteAccount,
-  onRefreshAccounts,
+  user,
+  onSignOut,
+  saveState = "idle",
 }: AppSidebarProps) {
   return (
     <aside className="w-full lg:w-56 shrink-0 flex flex-col gap-6 lg:sticky lg:top-8 lg:self-start">
@@ -71,10 +75,29 @@ export function AppSidebar({
             onCreate={onCreateAccount}
             onRename={onRenameAccount}
             onDelete={onDeleteAccount}
-            onRefresh={onRefreshAccounts}
+            saveState={saveState}
           />
         )}
       <div className="flex flex-col gap-2 lg:mt-auto">
+        {user && (
+          <div className="rounded-lg border border-[var(--border)] px-3 py-2 space-y-1">
+            <p className="text-xs font-medium truncate" title={user.email}>
+              {user.name}
+            </p>
+            <p className="text-[10px] text-[var(--muted)] truncate">
+              {user.email}
+            </p>
+            {onSignOut && (
+              <button
+                type="button"
+                onClick={onSignOut}
+                className="text-[11px] text-[var(--muted)] hover:text-[var(--foreground)]"
+              >
+                Ausloggen
+              </button>
+            )}
+          </div>
+        )}
         {showOnboarding && onOpenOnboarding && (
           <button
             type="button"

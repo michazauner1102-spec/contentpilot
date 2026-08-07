@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { liveAiStatus } from "@/lib/demo/liveAi";
+import { storeLabel } from "@/lib/db";
 
 export async function GET() {
-  const status = liveAiStatus();
-  return NextResponse.json(status);
+  return NextResponse.json({
+    ...liveAiStatus(),
+    storage: storeLabel(),
+  });
 }

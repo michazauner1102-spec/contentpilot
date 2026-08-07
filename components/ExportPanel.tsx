@@ -5,14 +5,21 @@ import {
   buildExportJson,
   buildExportMarkdown,
   buildExportPlainText,
+  buildShootDayExport,
   exportFilename,
   type ContentExportBundle,
 } from "@/lib/export/buildExport";
 import { copyToClipboard, downloadTextFile } from "@/lib/export/downloadClient";
-import type { ContentBriefing, ProductionGuide, ProgressEntry, ResearchResult, Zyklus } from "@/lib/types";
-import type { CreatorReferenceSuggestion } from "@/lib/types";
-
+import type {
+  ContentBriefing,
+  ProductionGuide,
+  ProgressEntry,
+  ResearchResult,
+  Zyklus,
+  CreatorReferenceSuggestion,
+} from "@/lib/types";
 import type { BrainstormIdea } from "@/lib/brainstorm/contentPillars";
+import { BTN_ACCENT, BTN_SECONDARY } from "@/lib/ui/theme";
 
 interface ExportPanelProps {
   briefing: ContentBriefing | null;
@@ -60,27 +67,59 @@ export function ExportPanel({
     setTimeout(() => setToast(null), 2500);
   };
 
-  const canExport = Boolean(briefing && zyklus);
-
-  if (!canExport) return null;
+  if (!briefing || !zyklus) return null;
 
   const b = bundle();
+  const scriptsReady = zyklus.plan.filter((v) =>
+    Boolean(v.skript?.body?.trim())
+  ).length;
 
   return (
-    <section className="rounded-xl border p-4 space-y-3">
+    <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 space-y-4">
       <div>
         <h2 className="font-semibold">Exportieren</h2>
-        <p className="text-sm opacity-80 mt-1">
-          Für Notion, Apple Notes, Obsidian, Google Docs: Markdown/JSON
-          herunterladen oder in die Zwischenablage — in Notion einfach
-          einfügen (Strg/Cmd+V).
+        <p className="text-sm text-[var(--muted)] mt-1">
+          Vollständiger Plan inkl. Skripte, Grafiken, Dreh-Anleitung und
+          Produktions-Checkliste. {scriptsReady}/{zyklus.plan.length} Videos
+          haben schon ein Skript.
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="grid sm:grid-cols-2 gap-2">
         <button
           type="button"
-          className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium hover:bg-[var(--surface-elevated)]"
+          className={`${BTN_ACCENT} text-sm`}
+          onClick={async () => {
+            const ok = await copyToClipboard(buildExportMarkdown(b));
+            flash(
+              ok
+                ? "Vollständiger Markdown kopiert — in Notion einfügen"
+                : "Kopieren fehlgeschlagen"
+            );
+          }}
+        >
+          Für Notion kopieren (komplett)
+        </button>
+        <button
+          type="button"
+          className={`${BTN_SECONDARY} text-sm`}
+          onClick={() => {
+            downloadTextFile(
+              buildShootDayExport(b),
+              exportFilename(briefing, "md").replace(
+                ".md",
+                "-drehtag.md"
+              ),
+              "text/markdown;charset=utf-8"
+            );
+            flash("Drehstag-Export heruntergeladen");
+          }}
+        >
+          Nur Drehtag (.md)
+        </button>
+        <button
+          type="button"
+          className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-elevated)]"
           onClick={() => {
             downloadTextFile(
               buildExportMarkdown(b),
@@ -94,7 +133,7 @@ export function ExportPanel({
         </button>
         <button
           type="button"
-          className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium hover:bg-[var(--surface-elevated)]"
+          className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-elevated)]"
           onClick={() => {
             downloadTextFile(
               buildExportPlainText(b),
@@ -107,7 +146,7 @@ export function ExportPanel({
         </button>
         <button
           type="button"
-          className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium hover:bg-[var(--surface-elevated)]"
+          className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-elevated)]"
           onClick={() => {
             downloadTextFile(
               buildExportJson(b),
@@ -121,17 +160,7 @@ export function ExportPanel({
         </button>
         <button
           type="button"
-          className="rounded-lg border border-[var(--accent)]/50 bg-[var(--surface-elevated)] px-3 py-2 text-sm font-medium hover:bg-[var(--surface)]"
-          onClick={async () => {
-            const ok = await copyToClipboard(buildExportMarkdown(b));
-            flash(ok ? "Markdown kopiert — in Notion einfügen" : "Kopieren fehlgeschlagen");
-          }}
-        >
-          Für Notion kopieren
-        </button>
-        <button
-          type="button"
-          className="rounded-lg border px-3 py-2 text-sm font-medium"
+          className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-elevated)]"
           onClick={async () => {
             const ok = await copyToClipboard(buildExportPlainText(b));
             flash(ok ? "Text kopiert" : "Kopieren fehlgeschlagen");
@@ -142,8 +171,8 @@ export function ExportPanel({
       </div>
 
       {onNotionSync && (
-        <div className="pt-2 border-t space-y-2">
-          <p className="text-xs opacity-70">
+        <div className="pt-2 border-t border-[var(--border)] space-y-2">
+          <p className="text-xs text-[var(--muted)]">
             Optional: Direkt-Sync, wenn{" "}
             <code className="text-[11px]">NOTION_TOKEN</code> gesetzt ist.
           </p>
@@ -157,7 +186,12 @@ export function ExportPanel({
           </button>
           {notionUrl && (
             <p className="text-sm">
-              <a className="underline" href={notionUrl} target="_blank" rel="noreferrer">
+              <a
+                className="underline"
+                href={notionUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
                 In Notion öffnen
               </a>
             </p>
@@ -165,9 +199,7 @@ export function ExportPanel({
         </div>
       )}
 
-      {toast && (
-        <p className="text-sm text-[var(--vertrauen)]">{toast}</p>
-      )}
+      {toast && <p className="text-sm text-[var(--vertrauen)]">{toast}</p>}
     </section>
   );
 }

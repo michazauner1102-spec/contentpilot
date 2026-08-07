@@ -11,9 +11,15 @@ interface LoadingIndicatorProps {
   taskId: LoadingTaskId;
   /** Kleines Inline-Badge statt Vollbild-Overlay */
   inline?: boolean;
+  /** Echter Fortschritt, wenn bekannt (z. B. „12 / 30 Videos") */
+  progress?: { done: number; total: number } | null;
 }
 
-export function LoadingIndicator({ taskId, inline }: LoadingIndicatorProps) {
+export function LoadingIndicator({
+  taskId,
+  inline,
+  progress,
+}: LoadingIndicatorProps) {
   const meta = LOADING_TASKS[taskId];
   const [elapsed, setElapsed] = useState(0);
 
@@ -37,6 +43,21 @@ export function LoadingIndicator({ taskId, inline }: LoadingIndicatorProps) {
         {meta.label}
       </p>
       <p className="mt-1 text-xs text-[var(--muted)]">{meta.hint}</p>
+      {progress && progress.total > 0 && (
+        <div className="mt-4 space-y-1">
+          <div className="h-1.5 w-full rounded-full bg-[var(--surface-elevated)] overflow-hidden">
+            <div
+              className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-500"
+              style={{
+                width: `${Math.round((progress.done / progress.total) * 100)}%`,
+              }}
+            />
+          </div>
+          <p className="text-xs text-[var(--foreground)] tabular-nums">
+            {progress.done} / {progress.total} Videos
+          </p>
+        </div>
+      )}
       <p className="mt-3 text-xs text-[var(--muted-strong)] tabular-nums">
         Dauert {estimate}
         {elapsed > 0 && (

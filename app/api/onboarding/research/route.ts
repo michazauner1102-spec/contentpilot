@@ -6,10 +6,14 @@ import { mockResearch } from "@/lib/demo/flowMock";
 import { aiRouteFailure } from "@/lib/demo/apiFallback";
 import type { ContentBriefing } from "@/lib/types";
 import type { ResearchFocusId } from "@/lib/research/themenBlocks";
+import { requireUser } from "@/lib/auth/dal";
 
 export const maxDuration = 120;
 
 export async function POST(req: Request) {
+  const auth = await requireUser();
+  if (auth.response) return auth.response;
+
   try {
     const body = (await req.json()) as {
       briefing?: ContentBriefing;

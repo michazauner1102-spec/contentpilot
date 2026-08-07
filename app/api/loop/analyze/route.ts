@@ -3,10 +3,14 @@ import { analyzeLoop } from "@/lib/loopAnalysis";
 import { DEMO_LEARNINGS } from "@/lib/demo/mockData";
 import { aiRouteFailure } from "@/lib/demo/apiFallback";
 import type { BereichGrouped } from "@/lib/insights/types";
+import { requireUser } from "@/lib/auth/dal";
 
-export const maxDuration = 120;
+export const maxDuration = 240;
 
 export async function POST(req: Request) {
+  const auth = await requireUser();
+  if (auth.response) return auth.response;
+
   try {
     const body = (await req.json()) as {
       performanceGroupedByBereich?: BereichGrouped;

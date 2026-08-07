@@ -1,40 +1,48 @@
-import { callClaudeJSON } from "@/lib/claude";
-import type { ShotListItem, VideoDetails, VideoIdea } from "@/lib/types";
+import { generateVideoScript } from "@/lib/scriptGenerator";
+import type {
+  ContentBriefing,
+  ReferenzVideo,
+  ResearchResult,
+  ShotListItem,
+  VideoDetails,
+  VideoIdea,
+} from "@/lib/types";
 
-export async function generateShotList(
-  videoIdea: VideoIdea,
-  skript: VideoDetails["skript"]
-): Promise<ShotListItem[]> {
-  const result = await callClaudeJSON<{ drehAnleitung: ShotListItem[] }>(
-    `Du erstellst praktische Dreh-Anleitungen für Social-Media-Videos (4-8 Shots).`,
-    `Video:
-${JSON.stringify(videoIdea, null, 2)}
-
-Skript:
-${JSON.stringify(skript, null, 2)}
-
-Leite eine Shot-List ab mit setting, einstellungsgroesse, inhalt, ungefaehreDauerSekunden.`,
-    `{ "drehAnleitung": [{ "setting", "einstellungsgroesse", "inhalt", "ungefaehreDauerSekunden" }] }`
+/** Mindestqualität absichern — ein leeres Skript soll nicht als fertig gelten. */
+function isUsable(details: VideoDetails): boolean {
+  return (
+    details.skript.hook.trim().length > 0 &&
+    details.skript.body.trim().length >= 80 &&
+    details.drehAnleitung.length > 0
   );
-
-  return result.drehAnleitung;
 }
 
 export async function generateVideoDetails(
   videoIdea: VideoIdea,
-  research?: import("@/lib/types").ResearchResult,
-  referenzen?: import("@/lib/types").ReferenzVideo[]
+  research?: ResearchResult,
+  referenzen?: ReferenzVideo[],
+  briefing?: ContentBriefing
 ): Promise<VideoDetails> {
-  const { generateScriptAndGrafik } = await import("@/lib/scriptGenerator");
-  const scriptPart = await generateScriptAndGrafik(
+  let payload = await generateVideoScript(
     videoIdea,
     research,
-    referenzen
+    referenzen,
+    briefing
   );
-  const drehAnleitung = await generateShotList(videoIdea, scriptPart.skript);
-  return {
-    ...videoIdea,
-    ...scriptPart,
-    drehAnleitung,
-  };
+  let details: VideoDetails = { ...videoIdea, ...payload };
+
+  // Ein zweiter Versuch, falls das Modell zu knapp geantwortet hat.
+  if (!isUsable(details)) {
+    payload = await generateVideoScript(
+      videoIdea,
+      research,
+      referenzen,
+      briefing
+    );
+    details = { ...videoIdea, ...payload };
+  }
+
+  return details;
 }
+
+export type { ShotListItem };
